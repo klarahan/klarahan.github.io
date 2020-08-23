@@ -1,0 +1,260 @@
+---
+title: "emotional democracy"
+author: "Oul Han"
+date: "1 October 2018"
+output: word_document
+---
+Abstract: 
+Using young democracy as case study, this paper reveals how negative framings of democracy in South Korea have steadily increased in the past two decades. Semi-supervised text analysis is used to explore discursive institutions in the keyword “democracy” in the leading center-left newspaper from 1990 to 2014. Results show that institutionalized emotions relate to legislative politics or modern history, whereas the former increases over time. The rise of negative affect suggests that polarization deepens between political parties rather than between ideological positions. When party institutions are weak, negative affect decouples from ideological roots and assumes the role of reproducing political competition through communication.
+
+This R document replicates the analysis from top to bottom. Original newspaper articles cannot be shared in their original form and are therefore turned into a RDS file, which can be loaded.
+
+```{r setup, include=FALSE}
+setwd("C:/Users/han/Dropbox/Public/EmoDem")
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(readr)
+```
+
+Prepare the data. 
+For replication: Load the .RDS text data that is provided.
+```{r message=FALSE, warning=FALSE}
+#Chosun Ibo text is especially messy, therefore some pre-cleaning:
+emo_chos <- read_tsv("emo_chos.csv") %>%
+  mutate(Newspaper = "Chosun Ilbo")
+emo_chos$Body <- gsub("</?[^>]+>|\\S*@\\S*|종이신문보기|\\p{S}", "", emo_chos$Body, perl = TRUE)
+
+emo_hani <- read_csv2("emo_hani.csv") %>%
+  mutate(Newspaper = "Hankyoreh")
+emo_hankook <- read_tsv("emo_hankook.csv") %>%
+  mutate(Newspaper = "Hankook Ilbo")
+
+emo_df <- rbind.data.frame(emo_chos, emo_hani, emo_hankook)
+rm(emo_chos, emo_hani, emo_hankook)
+emo_df$Body[1]
+saveRDS(emo_df, "emo_df.RDS")
+```
+
+Cleaned the text by checking the results iteratively; different text sources have different quirks at different times.
+```{r message=FALSE, warning=FALSE}
+emo_df$Tokens <- emo_df$Body  
+
+#structural stuff
+emo_df$Tokens <- gsub("한국아이닷컴 무단전재 및 재배포 금지|인터넷한국일보 무단 전재 및 재배포 금지|\r|지면PDF보기|
+                      </?[^>]+>|\\S*@\\S*", "", emo_df$Tokens, perl = TRUE) #remove html, links, email
+#language stuff
+emo_df$Tokens <- gsub("^[가-힣]*$", "", emo_df$Tokens, perl = TRUE) #only leave Korean chars
+emo_df$Tokens <- gsub("\\p{Han}", "", emo_df$Tokens, perl = TRUE) #strip Chinese chars
+emo_df$Tokens <- gsub("[a-zA-Z]+", "", emo_df$Tokens, perl = TRUE) #strip English chars
+#non-word stuff
+emo_df$Tokens <- gsub("[[:punct:]]|[[:digit:]]", "", emo_df$Tokens, perl = TRUE) #remove puncuation, digits 
+emo_df$Tokens <- gsub("\\p{S}", "", emo_df$Tokens, perl = TRUE) #remove symbols 
+emo_df$Tokens <- gsub("【|】|ㆍ", "", emo_df$Tokens, perl = TRUE) #remove more symbols 
+emo_df$Tokens <- gsub("'|\"|“|”|‘|’|„|”|«|»|「|」|『|』|〈|〉", "", emo_df$Tokens, perl = TRUE) #remove the universe of quotation marks 
+
+emo_df$Tokens[1]
+saveRDS(emo_df, "emo_df.RDS")
+```
+
+Now tokenize by noun stemming, which is necessary for best results in Korean. This can take a few (30) minutes.
+```{r message=FALSE, warning=FALSE}
+library(KoNLP)
+emo_df$Tokens <- extractNoun(emo_df$Tokens) 
+emo_df$Tokens[1]
+saveRDS(emo_df, "emo_df_toks.RDS")
+#emo_df <- readRDS("emo_df_toks.RDS")
+```
+
+Remove one-character words via feature selection, then concatenate tokens to "normal text" 
+```{r}
+emo_df <- readRDS("emo_df_toks.RDS")
+#remove words shorter than 1 char
+library(quanteda)
+tmp <- as.tokens(as.list(emo_df$Tokens))
+tmp <- tokens_remove(tmp, min_nchar = 2, padding = TRUE)
+#concatenate the tokens
+tmp <- as.list(tmp)
+tmp <- stringi::stri_c_list(tmp, " ")
+emo_df$Tokens <- tmp
+rm(tmp)
+
+emo_df$Tokens[1]
+saveRDS(emo_df, "emo_df_toks_clean.RDS")
+```
+
+Convert to stm type file
+```{r}
+#convert date
+emo_df$Date <- ymd(emo_df$Date)
+#convert token and metadata to quanteda dfm
+library(quanteda)
+emo_corpus <- corpus(emo_df, docid_field = "iidx", text_field = "Tokens")
+emo_dfm <- dfm(emo_corpus)
+#convert document term matrix to stm native format 
+library(stm)
+emo_dtm <- convert(emo_dfm, to = "stm")
+out <- prepDocuments(emo_dtm$documents, emo_dtm$vocab, meta = emo_dtm, lower.thresh = 10) #adjust threshold
+```
+
+```{r}
+head(out$vocab, 100)
+```
+
+Estimate stm
+```{r}
+prevalenceFit <- stm(documents = out$documents, vocab = out$vocab, 
+                     K = 20, prevalence =~ Newspaper + s(Date),
+                     max.em.its = 50, data = out$meta,
+                     init.type = "Spectral"
+                     )
+```
+
+
+
+Classify emotional frames
+```{r}
+
+```
+
+Plot emotional vs. non-emotional frames
+```{r}
+```
+
+Classify and plot two subject areas of emotional frames
+```{r}
+```
+
+tidystm
+https://github.com/mikajoh/tidystm
+```{r}
+#devtools::install_github("mikaelpoul/tidystm", dependencies = TRUE)
+
+## Load the packages and set seed
+library(tidystm)
+
+set.seed(2016)
+
+## Load the example data from the stm pacakge
+data(emo_df)
+
+## Estimate the effect on all three topics and return the point
+## estimates in a tidy data frame
+prep <- estimateEffect(1:3 ~ treatment, gadarianFit, gadarian)
+effect <- extract.estimateEffect(prep, "treatment", model = gadarianFit, method = "pointestimate")
+
+knitr::kable(effect)
+```
+
+```{r}
+## This time, lets estimate treatment effect as a function of party
+## id. We can than get an idea of whether the treatment effect vary
+## for people with different ids.
+prep <- estimateEffect(formula = 1:3 ~ treatment + pid_rep + treatment:pid_rep,
+                       stmobj = gadarianFit,
+                       metadata = gadarian)
+
+## And lets plot it using the included plotting function.
+op <- par(mfrow = c(1, 2))
+for (i in c(0, 1)) {
+  plot.estimateEffect(x = prep,
+                      covariate = "pid_rep",
+                      method = "continuous",
+                      model = gadarianFit,
+                      labeltype = "frex",
+                      n = 4,
+                      moderator = "treatment",
+                      moderator.value = i)
+}
+```
+
+```{r}
+## Lets extract the estimates in a tidy format so that we can plot it
+## ourselves. We can now use lapply instead to first run it with
+## moderator.value 0 and then with moderator.value 1, and then bind
+## the two data frames together.
+effect <- lapply(c(0, 1), function(i) {
+  extract.estimateEffect(x = prep,
+                         covariate = "pid_rep",
+                         method = "continuous",
+                         model = gadarianFit,
+                         labeltype = "frex",
+                         n = 4,
+                         moderator = "treatment",
+                         moderator.value = i)
+})
+effect <- do.call("rbind", effect)
+
+## And, for example, plot it with ggplot2 and facet by topic instead.
+library(ggplot2)
+
+ggplot(effect, aes(x = covariate.value, y = estimate,
+                   ymin = ci.lower, ymax = ci.upper,
+                   group = moderator.value,
+                   fill = factor(moderator.value))) +
+  facet_wrap(~ label, nrow = 2) +
+  geom_ribbon(alpha = .5) +
+  geom_line() +
+  scale_x_continuous(labels = function(x) ifelse(x == 1, "1\nREP", ifelse(x == 0, "0\nDEM", x))) +
+  labs(x = "Party ID",
+       y = "Expected Topic Proportion",
+       fill = "Treated (0/1)") +
+  theme(legend.position = "bottom")
+```
+
+
+STM browser (shiny app)
+```{r}
+library(devtools)
+install_github("methodds/stminsights")
+
+library(stminsights)
+run_stminsights()
+
+library(stm)
+
+out <- list(documents = poliblog5k.docs,
+            vocab = poliblog5k.voc,
+            meta = poliblog5k.meta)
+
+poli <- stm(documents = out$documents, 
+            vocab = out$vocab,
+            data = out$meta, 
+            prevalence = ~ rating * s(day),
+            K = 20)
+prep_poli <- estimateEffect(1:20 ~ rating * s(day), poli,
+                            meta = out$meta)
+
+poli_content <-  stm(documents = out$documents, 
+                     vocab = out$vocab,
+                     data = out$meta, 
+                     prevalence = ~ rating + s(day),
+                     content = ~ rating,
+                     K = 15)  
+prep_poli_content <- estimateEffect(1:15 ~ rating + s(day), poli_content,
+                                    meta = out$meta)
+
+save.image('stm_poliblog5k.RData')
+```
+
+stmCorrViz: A Tool for Structural Topic Model Visualizations
+```{r}
+install.packages("stmCorrViz")
+stmCorrViz(mod, file_out, documents_raw=NULL, documents_matrix=NULL,
+                title="STM Model", clustering_threshold=FALSE,
+                search_options = list(range_min=.05, range_max=5, step=.05), 
+                labels_number=7, display=TRUE, verbose=FALSE)
+```
+
+
+STM Browser
+https://github.com/mroberts/stmBrowser
+```{r}
+library(devtools)
+install_github("mroberts/stmBrowser",dependencies=TRUE)
+stmBrowser()
+```
+
+
+
+
