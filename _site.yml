@@ -1,8 +1,29 @@
-name: "my-website"
+name: "Welcome"
 navbar:
-  title: "My Website"
+  title: "Anonymized"
   left:
     - text: "Home"
       href: index.html
     - text: "About"
       href: about.html
+    - text: "Framing Korea"
+      href: korea.html
+      menu:
+        - text: "Online Appendix"
+        - text: "The Book"
+          href: fk_intro.html
+        - text: "Chapter 2"
+          href: fk2.html
+        - text: "Chapter 3"
+          href: fk3.html        
+        - text: "Chapter 4"
+          href: fk4.html
+        - text: "Chapter 5"
+          href: fk5.html
+        - text: "Chapter 6"
+          href: fk6.html
+output:
+  html_document:
+    theme: yeti 
+    highlight: textmate
+    df_print: paged
