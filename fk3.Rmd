@@ -1,5 +1,866 @@
 ---
-  title: "My Website"
----
+  title: "Chapter 3: Framing Left and Right"
+  subtitle: "Online Appendix"
   
-  Hello, Website!
+---
+```{r}
+setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+
+```
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+library(ggmosaic)
+library(forcats)
+library(lubridate)
+library(tidytext)
+library(extrafont)
+```
+  
+## CSES survey analyses
+
+Load and prepare CSES survey data.
+```{r include=FALSE}
+load("data/cses_imd.rdata")
+cses_all <- cses_imd %>% 
+  filter(IMD1006_NAM == "Republic of Korea"
+         ) %>% 
+  select(IMD1008_YEAR,   #election year
+         IMD3005_3,       #PARTY IDENTIFICATION: WHO
+         IMD3005_4,      #WHICH PARTY DO YOU FEEL CLOSEST TO
+         IMD3006,        #LEFT-RIGHT - SELF
+         IMD3008_A,       #LIKE-DISLIKE - PARTY A
+         IMD3008_B,       #LIKE-DISLIKE - PARTY B
+         IMD3008_C,       #LIKE-DISLIKE - PARTY C
+         IMD3008_D,       #LIKE-DISLIKE - PARTY D
+         IMD3008_E,       #LIKE-DISLIKE - PARTY E
+         IMD3008_F,       #LIKE-DISLIKE - PARTY F
+         IMD3010        #SATISFACTION WITH DEMOCRACY
+          ) %>% 
+  rename("year" = IMD1008_YEAR) %>% 
+  mutate_if(is.integer, as.factor) %>% 
+  as_tibble()
+
+# recode IMD3005_3 partyID 
+cses_all <-　cses_all %>% 
+  mutate(IMD3005_3 = recode(IMD3005_3,
+      "4100001" = "New Frontier Party (NFP)",
+      "4100002" = "Liberty Forward Party (LFP)",
+      "4100003" = "New Progressive Party (NPP)",
+      "4100004" = "Democratic United Party (DUP)",
+      "4100005" = "Unified Progressive Party (UPP)",
+      "4100006" = "Democratic Liberal Party", 
+      "4100007" = "Pro-Park Geun-hye Alliance",
+      "4100010" = "Millennium Democratic Party (MDP)",
+      "4100011" = "United Liberal Democrats (ULD)",
+      "4100012" = "Democratic People's Party",
+      "4100015" = "Democratic Labor Party (DLP)",
+      "4100016" = "Creative Korea Party (CKP)",
+      "4100017" = "Renewal of Korea Party",
+      "4100018" = "Democratic Party",
+      "4100019" = "Korea Youth Progress Party",
+      "4100020" = "National Integration 21",
+      "4100021" = "Our Party",
+      "4100022" = "Christian Party",
+      "4100023" = "New Korean Party of the Hope (NKPH)",
+      "9999988" = "NA",
+      "9999989" = "NA",
+      "9999990" = "NA", 
+      "9999991" = "NA",
+      "9999992" = "NA",
+      "9999997" = "NA",
+      "9999998" = "NA",
+      "9999999" = "NA")) %>% 
+  rename("partyID" = IMD3005_3) %>% 
+  na_if("NA") %>% 
+  drop_na()
+
+# recode parties to orientations 
+cses_all$partyID_binary <- case_when(
+  cses_all$partyID == "New Frontier Party (NFP)" ~ "Conservative",
+  cses_all$partyID == "Our Party" ~ "Liberal",
+  cses_all$partyID == "Democratic United Party (DUP)" ~ "Liberal",
+  cses_all$partyID == "Millennium Democratic Party (MDP)" ~ "Liberal",
+  cses_all$partyID == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+  cses_all$partyID == "Democratic Labor Party (DLP)" ~ "Progressive",
+  cses_all$partyID == "Renewal of Korea Party" ~ "Liberal",
+  cses_all$partyID == "Unified Progressive Party (UPP)" ~ "Progressive",
+  cses_all$partyID == "Liberty Forward Party (LFP)" ~ "Conservative",
+  cses_all$partyID == "New Progressive Party (NPP)" ~ "Progressive",
+  cses_all$partyID == "United Liberal Democrats (ULD)" ~ "Conservative",
+  cses_all$partyID == "Democratic People's Party" ~ "Conservative",
+  cses_all$partyID == "Democratic Liberal Party" ~ "Liberal",
+  cses_all$partyID == "National Integration 21" ~ "Progressive"
+  ) 
+
+# recode IMD3005_4 #How close to you feel to this party
+cses_all <-　cses_all %>% 
+  mutate(
+    IMD3005_4 = recode(
+      IMD3005_4,
+      `1` = "VERY CLOSE",
+      `2` = "SOMEWHAT CLOSE",
+      `3` = "NOT VERY CLOSE",
+      `7` = "NA",
+      `8` = "NA",
+      `9` = "NA")) %>% 
+  rename("party_closeness" = IMD3005_4) 
+
+# recode IMD3006 #LEFT-RIGHT - SELF
+cses_all <-　cses_all %>% 
+  rename("self_position" = IMD3006)
+
+# recode IMD3010 #SATISFACTION WITH DEMOCRACY
+cses_all <- cses_all %>% 
+  mutate(
+    IMD3010 = recode(
+      IMD3010,
+      `1` = "VERY SATISFIED",
+      `2` = "FAIRLY SATISFIED",
+      `4` = "NOT VERY SATISFIED",
+      `5` = "NOT AT ALL SATISFIED",
+      `7` = NA_character_,
+      `8` = NA_character_)) %>% 
+  rename("democratic_satisfaction" = IMD3010)
+
+#recode like/dislike party
+cses_all <-　cses_all %>% 
+  rename("like_party_A" = IMD3008_A) %>% 
+  rename("like_party_B" = IMD3008_B) %>% 
+  rename("like_party_C" = IMD3008_C) %>% 
+  rename("like_party_D" = IMD3008_D) %>%
+  rename("like_party_E" = IMD3008_E) %>%
+  rename("like_party_F" = IMD3008_F) 
+
+rm(cses_imd)
+```
+
+Further prepare CSES survey data.
+```{r include=FALSE}
+a <- cses_all %>% 
+  dplyr::select(like_party_A, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  drop_na() %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+    "New Frontier Party (NFP)",
+    year == 2004 ~ 
+    "Our Party",
+    year == 2008 ~ 
+    "New Frontier Party (NFP)",
+    year == 2012 ~ 
+    "New Frontier Party (NFP)")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive"
+    )) %>% 
+  arrange(desc(like_party_A)) %>% 
+  filter(like_party_A %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_A)
+
+b <- cses_all %>% 
+  dplyr::select(like_party_B, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+      "Millennium Democratic Party (MDP)",
+    year == 2004 ~ 
+      "New Frontier Party (NFP)",
+    year == 2008 ~ 
+      "Democratic United Party (DUP)",
+    year == 2012 ~ 
+      "Democratic United Party (DUP)")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive")) %>% 
+  arrange(desc(like_party_B)) %>% 
+  dplyr::filter(like_party_B %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_B)
+
+c <- cses_all %>% 
+  dplyr::select(like_party_C, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+      "United Liberal Democrats (ULD)",
+    year == 2004 ~ 
+      "Democratic Labor Party (DLP)",
+    year == 2008 ~ 
+      "Liberty Forward Party (LFP)",
+    year == 2012 ~ 
+      "Unified Progressive Party (UPP)")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive")) %>% 
+  arrange(desc(like_party_C)) %>% 
+  dplyr::filter(like_party_C %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_C)
+
+d <- cses_all %>% 
+  dplyr::select(like_party_D, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+      "Democratic People's Party",
+    year == 2004 ~ 
+      "Millennium Democratic Party (MDP)",
+    year == 2008 ~ 
+      "Pro-Park Geun-hye Alliance",
+    year == 2012 ~ 
+      "Liberty Forward Party (LFP)")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive")) %>% 
+  arrange(desc(like_party_D)) %>% 
+  dplyr::filter(like_party_D %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_D)
+
+e <- cses_all %>% 
+  dplyr::select(like_party_E, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+      "Democratic Liberal Party",
+    year == 2004 ~ 
+      "United Liberal Democrats (ULD)",
+    year == 2008 ~ 
+      "Democratic Labor Party (DLP)",
+    year == 2012 ~ 
+      "Christian Party")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive",
+    whomst == "Christian Party" ~ "Conservative")) %>% 
+  arrange(desc(like_party_E)) %>% 
+  dplyr::filter(like_party_E %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_E)
+
+f <- cses_all %>% 
+  dplyr::select(like_party_F, year, partyID_binary, party_closeness,
+                self_position, democratic_satisfaction) %>% 
+  dplyr::mutate(whomst = case_when(
+    year == 2000 ~ 
+      "New Korean Party of the Hope (NKPH)",
+    year == 2004 ~ 
+      "National Integration 21",
+    year == 2008 ~ 
+      "Renewal of Korea Party",
+    year == 2012 ~ 
+      "New Progressive Party (NPP)")) %>% 
+  dplyr::mutate(pos = case_when(
+    whomst == "New Frontier Party (NFP)" ~ "Conservative",
+    whomst == "Our Party" ~ "Liberal",
+    whomst == "Democratic United Party (DUP)" ~ "Liberal",
+    whomst == "Millennium Democratic Party (MDP)" ~ "Liberal",
+    whomst == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+    whomst == "Democratic Labor Party (DLP)" ~ "Progressive",
+    whomst == "Renewal of Korea Party" ~ "Liberal",
+    whomst == "Unified Progressive Party (UPP)" ~ "Progressive",
+    whomst == "Liberty Forward Party (LFP)" ~ "Conservative",
+    whomst == "New Progressive Party (NPP)" ~ "Progressive",
+    whomst == "United Liberal Democrats (ULD)" ~ "Conservative",
+    whomst == "Democratic People's Party" ~ "Conservative",
+    whomst == "Democratic Liberal Party" ~ "Liberal",
+    whomst == "National Integration 21" ~ "Progressive",
+    whomst == "Christian Party" ~ "Conservative",
+    whomst == "New Korean Party of the Hope (NKPH)" ~ "Conservative"
+    )) %>% 
+  arrange(desc(like_party_F)) %>% 
+  dplyr::filter(like_party_F %in% 0:10) %>% 
+  dplyr::select(-whomst) %>% 
+  dplyr::rename(like_partyID = like_party_F) 
+
+liking <- rbind(a, b, c, d, e, f) %>% 
+  filter(self_position %in% 0:10)
+liking[ liking == "NA" ] <- NA
+liking <- liking %>% 
+  drop_na()
+
+#data_prep
+a <- liking %>% 
+  dplyr::filter(like_partyID == 0 | like_partyID == 10) %>% 
+  droplevels %>% 
+  dplyr::select(year, democratic_satisfaction, like_partyID, pos,
+                party_closeness, self_position, partyID_binary) %>% 
+  dplyr::mutate(democratic_satisfaction = case_when(
+    democratic_satisfaction == "VERY SATISFIED" ~ "Very",
+    democratic_satisfaction == "FAIRLY SATISFIED" ~ "Fairly",
+    democratic_satisfaction == "NOT VERY SATISFIED" ~ "Not very",
+    democratic_satisfaction == "NOT AT ALL SATISFIED" ~ "Not at all")) %>%
+  dplyr::mutate(demsatis_2 = case_when(
+    democratic_satisfaction == "Very" ~ "Satisfied: Yes",
+    democratic_satisfaction == "Fairly" ~ "Satisfied: Yes",
+    democratic_satisfaction == "Not very" ~ "Satisfied: No",
+    democratic_satisfaction == "Not at all" ~ "Satisfied: No")) %>%
+  dplyr::mutate(demsatis_3 = case_when(
+    demsatis_2 == "Satisfied: Yes" ~ "Yes",
+    demsatis_2 == "Satisfied: Yes" ~ "Yes",
+    demsatis_2 == "Satisfied: No" ~ "No",
+    demsatis_2 == "Satisfied: No" ~ "No")) %>%
+  dplyr::mutate(party_closeness = case_when(
+    party_closeness == "VERY CLOSE" ~ "Very",
+    party_closeness == "SOMEWHAT CLOSE" ~ "Somewhat",
+    party_closeness == "NOT VERY CLOSE" ~ "Not very")) %>% 
+  dplyr::mutate(govt = case_when(
+    year == "2000" ~ "2000 \nLiberal \ngovernment",
+    year == "2004" ~ "2004 \nLiberal \ngovernment",
+    year == "2008" ~ "2008 \nConservative \ngovernment",
+    year == "2012" ~ "2012 \nConservative \ngovernment")) %>%
+  dplyr::mutate(govt_short = case_when(
+    year == "2000" ~ "During a \nliberal government",
+    year == "2004" ~ "During a \nliberal government",
+    year == "2008" ~ "During a \nconservative government",
+    year == "2012" ~ "During a \nconservative government")) %>%
+  dplyr::mutate(party_close_2 = case_when(
+    party_closeness == "Very" ~ "Feel very close \nto party",
+    party_closeness == "Somewhat" ~ "Feel somewhat close \nto party",
+    party_closeness == "Not very" ~ "Feel not very close \nto party")) %>%
+  dplyr::mutate(partyID_2 = case_when(
+    partyID_binary == "Conservative" ~ "Identify with \nConservative party",
+    partyID_binary == "Progressive" ~ "Identify with \nProgressive \nor Liberal party",
+    partyID_binary == "Liberal" ~ "Identify with \nProgressive \nor Liberal party")) %>% 
+  dplyr::mutate(self_simple = case_when(
+    self_position %in% 0:3 ~ "Left",
+    self_position %in% 4:6 ~ "Center",
+    self_position %in% 7:10 ~ "Right")) %>% 
+  mutate_if(is.character, as.factor) 
+#relevel levels
+a$like_partyID <- factor(a$like_partyID,
+                         levels = c("0", "10"),
+                         labels = c("Strongly dislike \nthe government party",
+                                    "Strongly like \nthe government party"))
+a$democratic_satisfaction <- fct_relevel(a$democratic_satisfaction,
+                                         "Very", "Fairly", "Not very")
+a$self_simple <- fct_relevel(a$self_simple, "Left", "Center")                                  
+a$pos <- fct_relevel(a$pos, "Progressive", "Liberal")
+a$partyID_binary <- fct_relevel(a$partyID_binary, 
+                                "Progressive", "Liberal")
+a$partyID_2 <- fct_relevel(a$partyID_2, "Identify with \nProgressive \nor Liberal party", "Identify with \nConservative party")
+a$demsatis_3 <- fct_relevel(a$demsatis_3, "Yes", "No")
+
+
+```
+
+Like/dislike of parties, satisfaction with democracy, and ruling government
+```{r}
+
+ggplot(a) +
+  geom_mosaic(aes(x = product(pos), 
+                  fill=demsatis_3),
+              divider = ddecker()) +
+  facet_wrap(govt_short~like_partyID, ncol = 4) +
+  labs(x = "Dislike/like of government party",
+       y = element_blank(),
+       caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1543 observations)
+       Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
+       Likeability rating of Parties A-I on a 0-10 scale (IMD3008); Strongly dislike = 0, Strongly like = 10
+       Parties A-I differ by year and were labeled afterwards as Conservative/ Liberal/ Progressive
+       Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No",
+       fill = "Satisfied \nwith democracy",
+       title = "Like/dislike of parties, satisfaction with democracy, and ruling government"
+       ) + 
+  theme_classic() +
+  theme(plot.subtitle = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position="top") +
+  scale_fill_viridis_d(option = "plasma")
+
+```
+
+Left-right positions, satisfaction with democracy, and ruling government
+```{r message=FALSE, warning=FALSE}
+ggplot(a) +
+  geom_bar(aes(x = self_position, fill = demsatis_3),
+           position = "fill", offset = 0.02) +
+  labs(x = "Respondents' self-placement from Left to Right",
+       y = "Ratio",
+       caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012; 1656 observations
+       Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
+       Respondents' self-placement on a 0-10 Left-Right scale (IMD3006); Most Left = 0, Most Right = 10
+       Satisfaction with democracy (IMD3010)",
+       fill = "Satisfaction \nwith democracy", 
+       title = "Left-right positions, satisfaction with democracy, and ruling government") +
+  facet_grid(.~govt_short) +
+  scale_fill_viridis_d(end = .6) +
+  theme_classic()  
+```
+ 
+Party identification, satisfaction with democracy, and ruling government
+```{r}
+ggplot(a) +
+  geom_mosaic(aes(x = product(partyID_2), 
+                  fill=demsatis_3 ),
+              divider = ddecker(), offset = 0.02) +
+  facet_grid(.~govt_short) +
+  labs(x = element_blank(),
+       y = element_blank(),
+       caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1656 observations)
+       Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
+       Party identification (IMD3005_3); Which party do you feel closest to?
+       Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No",
+       fill = "Satisfaction \nwith democracy", 
+       title = "Party identification, satisfaction with democracy, and ruling government"
+       ) + 
+  theme_classic() +
+  theme(plot.subtitle = element_text(hjust = 0.5)) +
+  #theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  theme() +
+  scale_fill_viridis_d(option = "magma", end = 0.6)
+```
+
+Partian sorting over time
+```{r}
+
+ggplot(a) +
+  geom_mosaic(aes(x = product(self_simple), 
+                  fill = partyID_2), 
+              offset = 0.02) +
+  facet_grid(.~year, drop = TRUE, scales = "free_x") +
+  scale_fill_viridis_d(option = "B", end = .9) +
+  labs(x = "Self-placement",
+       y = "Party identification",
+       caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1543 observations total)
+       Party identification (IMD3005_3): Which party do you feel closest to?
+       Self-placement on a 0-10 scale (IMD3006); Left = 0:3, Center = 4:6, Right = 7:10",
+       title = "Partisan sorting over time") + 
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        legend.position = "none") 
+
+```
+
+Proportions of democratic satisfaction 
+```{r}
+ggplot(a) +
+  geom_bar(aes(x = year, fill = democratic_satisfaction),
+           position = "fill") +
+  labs(x = "Year",
+       y = "Ratio",
+       fill = "Satisfaction \nwith democracy") +
+  scale_fill_brewer(palette = "PiYG", direction = -1) +
+  theme_classic()
+```
+
+Show survey participation by party identification 
+```{r}
+a %>% 
+  dplyr::select(year, partyID_binary) %>% 
+  dplyr::group_by(year) %>% 
+  dplyr::count(partyID_binary) %>% 
+ggplot(aes(x= year, weights = n, fill = partyID_binary)) + 
+  geom_bar(position = "dodge") +
+  scale_fill_brewer(palette = "Pastel1", direction = -1) +
+  theme_classic() +
+  labs(x = "Year",
+       y = "Count",
+       fill = "Party identification \nby respondents") 
+```
+
+## Left-Right meanings from newspaper text
+Load and prepare data
+```{r}
+corpus <- readRDS("data/df_corpus")
+#Data Prep
+prog <- bind_rows(corpus %>% filter(Keyword == "Progressive")) 
+cons <- bind_rows(corpus %>% filter(Keyword == "Conservative"))   
+Right <- bind_rows(corpus %>% filter(Keyword == "Right")) 
+Left <- bind_rows(corpus %>% filter(Keyword == "Left"))
+
+ideol <- bind_rows(prog, cons) %>%
+  mutate(timestamp = ymd(Date)) %>%
+  mutate(prezterm = Date) 
+
+spati <- bind_rows(Left, Right) %>%
+  mutate(timestamp = ymd(Date)) %>%
+  mutate(prezterm = Date) 
+
+rm(prog, cons, Right, Left)
+
+```
+
+Frequency of political dimension keywords
+```{r message=FALSE, warning=TRUE}
+kwordtypes_long <- bind_rows(ideol %>%
+                          mutate(discourse = "ideological (conservative/progressive)"),
+                        spati %>% 
+                          mutate(discourse = "spatial (Right/Left)")) %>%
+  mutate(timestamp(ymd(Date)))
+
+ggplot(kwordtypes_long, aes(x = timestamp, linetype = Newspaper)) +
+  geom_freqpoly(position = "identity", bins = 15, show.legend = TRUE) +
+  facet_wrap(~discourse, nrow = 2) +
+  labs(x = "year", y = "count of keywords",
+       title = "Frequency of categories by two dimensions") +
+  theme_bw() 
+```
+
+Ideological dimension usage by government administation
+```{r echo=FALSE}
+
+ideol1 <- ideol %>%
+  mutate(prezterm = "t1") %>%
+  filter(Date >= as.Date("1990-1-1") & Date <= as.Date("1992-12-31"))
+ideol2 <- ideol %>%
+  mutate(prezterm = "t2") %>%
+  filter(Date >= as.Date("1993-1-1") & Date <= as.Date("1997-12-31"))
+ideol3 <- ideol %>%
+  mutate(prezterm = "t3") %>%
+  filter(Date >= as.Date("1998-1-1") & Date <= as.Date("2002-12-31"))
+ideol4 <- ideol %>%
+  mutate(prezterm = "t4") %>%
+  filter(Date >= as.Date("2003-1-1") & Date <= as.Date("2007-12-31"))
+ideol5 <- ideol %>%
+  mutate(prezterm = "t5") %>%
+  filter(Date >= as.Date("2008-1-1") & Date <= as.Date("2012-12-31"))
+ideol6 <- ideol %>%
+  mutate(prezterm = "t6") %>%
+  filter(Date >= as.Date("2013-1-1") & Date <= as.Date("2014-12-31"))
+
+ideol_terms <- bind_rows(ideol1, ideol2, ideol3, ideol4, ideol5, ideol6)
+rm(ideol1, ideol2, ideol3, ideol4, ideol5, ideol6)
+   
+ggplot(ideol_terms) +
+  geom_bar(aes(x = prezterm, fill = Newspaper), 
+           position = "fill", show.legend = TRUE) +
+  facet_grid(~Keyword) +
+  labs(title = "Ideological dimension usage over time", 
+       x = "Government administation", 
+       y = "Count of keywords") +
+  scale_fill_viridis_d() +
+  theme_minimal()
+  
+```
+
+```{r echo=TRUE}
+
+spati1 <- spati %>%
+  mutate(prezterm = "t1") %>%
+  filter(Date >= as.Date("1990-1-1") & Date <= as.Date("1992-12-31"))
+spati2 <- spati %>%
+  mutate(prezterm = "t2") %>%
+  filter(Date >= as.Date("1993-1-1") & Date <= as.Date("1997-12-31"))
+spati3 <- spati %>%
+  mutate(prezterm = "t3") %>%
+  filter(Date >= as.Date("1998-1-1") & Date <= as.Date("2002-12-31"))
+spati4 <- spati %>%
+  mutate(prezterm = "t4") %>%
+  filter(Date >= as.Date("2003-1-1") & Date <= as.Date("2007-12-31"))
+spati5 <- spati %>%
+  mutate(prezterm = "t5") %>%
+  filter(Date >= as.Date("2008-1-1") & Date <= as.Date("2012-12-31"))
+spati6 <- spati %>%
+  mutate(prezterm = "t6") %>%
+  filter(Date >= as.Date("2013-1-1") & Date <= as.Date("2014-12-31"))
+
+spati_terms <- bind_rows(spati1, spati2, spati3, spati4, spati5, spati6)
+rm(spati1, spati2, spati3, spati4, spati5, spati6)
+
+
+ggplot(spati_terms, aes(x = timestamp, color = Newspaper)) +
+  geom_bar(aes(x = prezterm, fill = Newspaper), 
+           position = "fill", show.legend = TRUE) +
+  facet_grid(~Keyword) +
+  labs(title = "Spatial dimension usage over time", 
+       x = "Category", y = "Count of keywords")  +
+  scale_fill_viridis_d(option = "A") +
+  theme_minimal()
+```
+
+Prepare text scaling
+```{r message=FALSE, warning=FALSE}
+
+#corpus
+require(quanteda)
+spati_corpus <- corpus(spati_terms, text_field = "Body") 
+ideol_corpus <- corpus(ideol_terms, text_field = "Body")
+
+#keyness 
+spati_dfm <- dfm(spati_corpus,  
+                 groups = "Keyword",
+                 remove_punct = TRUE) %>%
+  dfm_select(min_nchar = 2)
+
+ideol_dfm <- dfm(ideol_corpus,
+                 groups = "Keyword",
+                 remove_punct = TRUE) %>%
+  dfm_select(min_nchar = 2)
+
+result_keyness_spati <- textstat_keyness(spati_dfm, target = "Right")
+result_keyness_ideol <- textstat_keyness(ideol_dfm, target = "Conservative")
+
+```
+
+Show keyness
+```{r message=FALSE, warning=FALSE}
+
+# plot1 <- textplot_keyness(result_keyness_spati, n = 10)
+# plot2 <- textplot_keyness(result_keyness_ideol, n = 10)
+# gridExtra::grid.arrange(plot1, plot2, ncol=2)
+
+# pdf.options(family = "Korea1deb")
+# use this if not using cairo_pdf device
+
+textplot_keyness(result_keyness_spati, n = 10, color = c("black", "grey")) +
+  xlim(-3500, 1200) +
+  annotate("text", x = -500, y = 20, label = "Japan", hjust = 1) + 
+  annotate("text", x = -500, y = 19, label = "of Japan", hjust = 1) + 
+  annotate("text", x = -500, y = 18, label = "Abe", hjust = 1) + 
+  annotate("text", x = -500, y = 17, label = "right-wing", hjust = 1) + 
+  annotate("text", x = -500, y = 16, label = "LDP", hjust = 1) + 
+  annotate("text", x = -500, y = 15, label = "Japan is", hjust = 1) + 
+  annotate("text", x = -500, y = 14, label = "Dokdo Island", hjust = 1) + 
+  annotate("text", x = -500, y = 13, label = "Koizumi", hjust = 1) + 
+  annotate("text", x = -500, y = 12, label = "Yasukuni", hjust = 1) + 
+  annotate("text", x = -500, y = 11, label = "comfort women", hjust = 1) + 
+  annotate("text", x = -500, y = 10, label = "Korea-USA", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 9, label = "DLP", hjust = 1, color = "grey50")  + 
+  annotate("text", x = -500, y = 8, label = "Bongunsa", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 7, label = "Beef", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 6, label = "Korean Teachers and Education Workers Union", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 5, label = "South Korean Federation of University Students Councils", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 4, label = "Kyohaksa", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 3, label = "mad cow disease", hjust = 1, color = "grey50")+ 
+  annotate("text", x = -500, y = 2, label = "National Intelligence Service", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 1, label = "left-wing", hjust = 1, color = "grey50") +
+  theme(text=element_text(family="NanumGothic"))
+
+# use cairo_pdf device when plotting
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+textplot_keyness(result_keyness_ideol, n = 10, color = c("black", "grey")) +
+  xlim(-1100, 1100) +
+  annotate("text", x = 700, y = 20, label = "Japan", hjust = 0) + 
+  annotate("text", x = 700, y = 19, label = "of Japan", hjust = 0) + 
+  annotate("text", x = 700, y = 18, label = "Abe", hjust = 0) + 
+  annotate("text", x = 700, y = 17, label = "Blue House", hjust = 0) + 
+  annotate("text", x = 700, y = 16, label = "Koizumi", hjust = 0) + 
+  annotate("text", x = 700, y = 15, label = "LDP", hjust = 0) + 
+  annotate("text", x = 700, y = 14, label = "New Korea Party", hjust = 0) + 
+  annotate("text", x = 700, y = 13, label = "of the PM", hjust = 0) + 
+  annotate("text", x = 700, y = 12, label = "[morpheme]", hjust = 0) + 
+  annotate("text", x = 700, y = 11, label = "the PM", hjust = 0) + 
+  annotate("text", x = 700, y = 10, label = "party", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 9, label = "electoral district", hjust = 0, color = "grey50")  + 
+  annotate("text", x = 700, y = 8, label = "opposition party", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 7, label = "DLP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 6, label = "proportional rep.", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 5, label = "NPP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 4, label = "Lee Suk-gi", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 3, label = "progressivist", hjust = 0, color = "grey50")+ 
+  annotate("text", x = 700, y = 2, label = "UPP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 1, label = "progressive", hjust = 0, color = "grey50") +
+  theme(text=element_text(family="NanumGothic")) 
+
+```
+
+## CSES survey analyses (international bonus)
+
+Bonus: Preparing data for Democratic satisfaction across more countries
+```{r}
+cses_intl <- cses_imd %>% 
+  dplyr::select(IMD1006_NAM,
+                IMD1008_YEAR,   #election year
+                IMD3006,        #LEFT-RIGHT - SELF
+                IMD3010,        #SATISFACTION WITH DEMOCRACY
+                IMD5051_1,      #polity
+                IMD5050_1       #freedom house rating (1-7)
+  ) %>% 
+  dplyr::rename("year" = IMD1008_YEAR) %>% 
+  dplyr::rename("self_position" = IMD3006) %>% 
+  dplyr::rename("democratic_satisfaction" = IMD3010) %>% 
+  dplyr::rename("country" = IMD1006_NAM) %>% 
+  dplyr::rename("polity" = IMD5051_1) %>% 
+  dplyr::rename("freedom" = IMD5050_1) %>% 
+  dplyr::mutate_if(is.integer, as.factor) %>% 
+  dplyr::mutate_if(is.character, as.factor) %>% 
+  as_tibble()
+
+democracies <- list(
+  postWWI_1919_1922 = c("Greece", "Great Britain", "Sweden", 
+                        "Portugal", "Spain"),
+  postWWII_1945_1950 = c("France", "Germany", "Italy", "Austria",
+                         "Belgium", "Denmark", "Norway",
+                         "Finland", "Japan", "Argentina",
+                         "Brazil"),
+  africandecol_1956_1968 = c("South Africa", "Kenya"),
+  thirdwave_1974_1988 = c("Greece", "Portugal", "Spain", 
+                          "Argentina", "Brazil", "Chile",
+                          "Philippines", "Pakistan", "South Korea",
+                          "Taiwan"),
+  postsoviet_1989_1994 = c("Poland", "Hungary", "East Germany",
+                           "Czech Republic", "Bulgaria",
+                           "Romania", "Estonia",
+                            "Latvia", "Lithuania",
+                           "Russian Federation", "Slovakia", "Slovenia",
+                          "Albania"),
+  colorrev_2000_2007 = c("Croatia", "Serbia", "Ukraine", "Kyrgyzstan",
+                         "Belarus"))
+names(democracies) <- c("Post-WWI (1919-1922)",
+                        "Post-WWII (1945_1950)",
+                        "African decolonization (1956-1968)",
+                        "Third wave (1974_1988)",
+                        "Post-soviet (1989-1994)",
+                        "Color revolution (2000-2007)")
+e <- cses_intl %>% 
+  dplyr::filter(democratic_satisfaction == 1|2|4|5) %>% 
+  dplyr::mutate(satisfied = case_when(
+    democratic_satisfaction == 1 ~ "very",
+    democratic_satisfaction == 2 ~ "fairly",
+    democratic_satisfaction == 4 ~ "not very",
+    democratic_satisfaction == 5 ~ "not at all")) %>%
+  dplyr::filter(country %in% unlist(democracies)) %>% 
+  dplyr::mutate(waves = case_when(
+    country %in% unlist(democracies[1]) ~ "Post-WWI (1919-1922)",
+    country %in% unlist(democracies[2]) ~ "Post-WWII (1945-1950)",
+    country %in% unlist(democracies[3]) ~ "African decolonization (1956-1968)",
+    country %in% unlist(democracies[4]) ~ "Third wave (1974-1988)",
+    country %in% unlist(democracies[5]) ~ "Post-soviet (1989-1994)",
+    country %in% unlist(democracies[6]) ~ "Color revolution (2000-2007)" 
+    )) %>% 
+  dplyr::mutate(yn = case_when(
+    satisfied == "very" ~ "yes",
+    satisfied == "fairly" ~ "yes",
+    satisfied == "not very" ~ "no",
+    satisfied == "not at all" ~ "no")) %>% 
+  dplyr::mutate(self_simple = case_when(
+    self_position %in% 0:3 ~ "Left",
+    self_position %in% 4:6 ~ "Center",
+    self_position %in% 7:10 ~ "Right")) %>%
+  drop_na() %>% 
+  add_count(waves, satisfied) %>% 
+  dplyr::mutate(prop = n/sum(n)) %>% 
+  dplyr::ungroup()
+#e <- arrange(e, year, desc(n))
+#e$country <- factor(e$country, levels = unique(e$country)) 
+e$waves  <- factor(e$waves,
+                   levels = c("Post-WWI (1919-1922)", 
+                              "Post-WWII (1945-1950)", 
+                              "African decolonization (1956-1968)",
+                              "Third wave (1974-1988)",
+                              "Post-soviet (1989-1994)",
+                              "Color revolution (2000-2007)"))
+e$satisfied  <- factor(e$satisfied , 
+                       levels = c("very", 
+                                  "fairly", 
+                                  "not very",
+                                  "not at all"))
+e$self_simple <- factor(e$self_simple,
+                        levels = c("Left",
+                                   "Center",
+                                   "Right"))
+```
+ 
+Bonus: Democratic satisfaction across countries in waves of democratization
+```{r}
+
+labels <- c("Post-WWI (1919-1922)" = "Post-WWI \n(1919-1922)", 
+            "Post-WWII (1945-1950)" = "Post-WWII \n(1945-1950)", 
+            "African decolonization (1956-1968)" = "African \ndecolonization \n(1956-1968)",
+            "Third wave (1974-1988)" = "Third wave \n(1974-1988)",
+            "Post-soviet (1989-1994)" = "Post-soviet \n(1989-1994)",
+            "Color revolution (2000-2007)" = "Color revolution \n(2000-2007)")
+e %>% 
+  dplyr::add_count(waves, yn) %>% 
+  dplyr::mutate(prop = n/sum(n)) %>% 
+  ggplot(aes(x = self_simple, 
+             y = prop,
+             fill = yn)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Respondents' self-placement from Left to Right",
+       y = "Ratio",
+       caption = "
+       CSES IMD survey items; 118560 observations
+       Subset of available countries in CSES from list:
+       The post-WWI Wave: Eastern/Central Europe
+       The post-WWII Wave: Western Europe/Japan; Latin America (to 1948)
+       The African Decolonization Wave: Sub-Saharan Africa
+       The ‘Third’ Wave: Southern Europe, Latin America, Asia
+       The Post-Soviet Wave: Eastern Europe and Former Soviet Republics; Africa
+       The Color Revolutions: Eastern Europe and Former Soviet Republics
+       Respondents' self-placement on a 0-10 scale (IMD3006); Left = 0:3, Center = 4:6, Right = 7:10
+       Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No",
+       fill = "Satisfaction with democracy",
+       subtitle = "Countries in waves of democratization") +
+  facet_wrap(.~waves, labeller = labeller(waves = labels), ncol = 6) +
+  scale_fill_viridis_d() +
+  theme_classic() +
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 40, hjust = 1),
+        plot.subtitle = element_text(hjust = 0.5)) +
+  scale_y_continuous(breaks = seq(0.00, 1.00, by = 0.50)) 
+```
+
+ 
+ 

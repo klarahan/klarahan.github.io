@@ -20,8 +20,6 @@ navbar:
           href: fk4.html
         - text: "Chapter 5"
           href: fk5.html
-        - text: "Chapter 6"
-          href: fk6.html
 output:
   html_document:
     theme: yeti 

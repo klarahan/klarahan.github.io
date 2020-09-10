@@ -4,7 +4,11 @@ subtitle: "Online Appendix"
 ---
 
 ```{r setup, include=FALSE}
-setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+```
+
+Load libraries
+```{r}
 library(lubridate)
 library(ggplot2)
 library(dplyr)
@@ -610,7 +614,7 @@ plot(prep_point, covariate = "Newspaper",
 ```
 
 Plot topic prevalences by time, without smoothing lines.
-```{r eval=FALSE, include=FALSE}
+```{r}
 # prepare dataframe with the package stm_insights
 effects_point <- get_effects(estimates = prep_point,
                            variable = 'Days',
