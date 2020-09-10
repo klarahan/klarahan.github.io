@@ -24,7 +24,7 @@ library(extrafont)
 ## CSES survey analyses
 
 Load and prepare CSES survey data.
-```{r include=FALSE}
+```{r eval=FALSE, include=FALSE}
 load("data/cses_imd.rdata")
 cses_all <- cses_imd %>% 
   filter(IMD1006_NAM == "Republic of Korea"
@@ -137,10 +137,12 @@ cses_all <-　cses_all %>%
   rename("like_party_F" = IMD3008_F) 
 
 rm(cses_imd)
+saveRDS(cses_all, "data/cses_korea.RDS")
 ```
 
 Further prepare CSES survey data.
 ```{r include=FALSE}
+readRDS("data/cses_korea.RDS")
 a <- cses_all %>% 
   dplyr::select(like_party_A, year, partyID_binary, party_closeness,
                 self_position, democratic_satisfaction) %>% 
