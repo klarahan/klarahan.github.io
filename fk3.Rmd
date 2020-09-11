@@ -727,142 +727,141 @@ textplot_keyness(result_keyness_ideol, n = 10, color = c("black", "grey")) +
 
 ```
 
-## CSES survey analyses (international bonus)
+<!-- ## CSES survey analyses (international bonus) -->
 
-Bonus: Preparing data for Democratic satisfaction across more countries
-```{r}
-cses_intl <- cses_imd %>% 
-  dplyr::select(IMD1006_NAM,
-                IMD1008_YEAR,   #election year
-                IMD3006,        #LEFT-RIGHT - SELF
-                IMD3010,        #SATISFACTION WITH DEMOCRACY
-                IMD5051_1,      #polity
-                IMD5050_1       #freedom house rating (1-7)
-  ) %>% 
-  dplyr::rename("year" = IMD1008_YEAR) %>% 
-  dplyr::rename("self_position" = IMD3006) %>% 
-  dplyr::rename("democratic_satisfaction" = IMD3010) %>% 
-  dplyr::rename("country" = IMD1006_NAM) %>% 
-  dplyr::rename("polity" = IMD5051_1) %>% 
-  dplyr::rename("freedom" = IMD5050_1) %>% 
-  dplyr::mutate_if(is.integer, as.factor) %>% 
-  dplyr::mutate_if(is.character, as.factor) %>% 
-  as_tibble()
+<!-- Bonus: Preparing data for Democratic satisfaction across more countries -->
+<!-- ```{r} -->
+<!-- cses_intl <- cses_imd %>%  -->
+<!--   dplyr::select(IMD1006_NAM, -->
+<!--                 IMD1008_YEAR,   #election year -->
+<!--                 IMD3006,        #LEFT-RIGHT - SELF -->
+<!--                 IMD3010,        #SATISFACTION WITH DEMOCRACY -->
+<!--                 IMD5051_1,      #polity -->
+<!--                 IMD5050_1       #freedom house rating (1-7) -->
+<!--   ) %>%  -->
+<!--   dplyr::rename("year" = IMD1008_YEAR) %>%  -->
+<!--   dplyr::rename("self_position" = IMD3006) %>%  -->
+<!--   dplyr::rename("democratic_satisfaction" = IMD3010) %>%  -->
+<!--   dplyr::rename("country" = IMD1006_NAM) %>%  -->
+<!--   dplyr::rename("polity" = IMD5051_1) %>%  -->
+<!--   dplyr::rename("freedom" = IMD5050_1) %>%  -->
+<!--   dplyr::mutate_if(is.integer, as.factor) %>%  -->
+<!--   dplyr::mutate_if(is.character, as.factor) %>%  -->
+<!--   as_tibble() -->
 
-democracies <- list(
-  postWWI_1919_1922 = c("Greece", "Great Britain", "Sweden", 
-                        "Portugal", "Spain"),
-  postWWII_1945_1950 = c("France", "Germany", "Italy", "Austria",
-                         "Belgium", "Denmark", "Norway",
-                         "Finland", "Japan", "Argentina",
-                         "Brazil"),
-  africandecol_1956_1968 = c("South Africa", "Kenya"),
-  thirdwave_1974_1988 = c("Greece", "Portugal", "Spain", 
-                          "Argentina", "Brazil", "Chile",
-                          "Philippines", "Pakistan", "South Korea",
-                          "Taiwan"),
-  postsoviet_1989_1994 = c("Poland", "Hungary", "East Germany",
-                           "Czech Republic", "Bulgaria",
-                           "Romania", "Estonia",
-                            "Latvia", "Lithuania",
-                           "Russian Federation", "Slovakia", "Slovenia",
-                          "Albania"),
-  colorrev_2000_2007 = c("Croatia", "Serbia", "Ukraine", "Kyrgyzstan",
-                         "Belarus"))
-names(democracies) <- c("Post-WWI (1919-1922)",
-                        "Post-WWII (1945_1950)",
-                        "African decolonization (1956-1968)",
-                        "Third wave (1974_1988)",
-                        "Post-soviet (1989-1994)",
-                        "Color revolution (2000-2007)")
-e <- cses_intl %>% 
-  dplyr::filter(democratic_satisfaction == 1|2|4|5) %>% 
-  dplyr::mutate(satisfied = case_when(
-    democratic_satisfaction == 1 ~ "very",
-    democratic_satisfaction == 2 ~ "fairly",
-    democratic_satisfaction == 4 ~ "not very",
-    democratic_satisfaction == 5 ~ "not at all")) %>%
-  dplyr::filter(country %in% unlist(democracies)) %>% 
-  dplyr::mutate(waves = case_when(
-    country %in% unlist(democracies[1]) ~ "Post-WWI (1919-1922)",
-    country %in% unlist(democracies[2]) ~ "Post-WWII (1945-1950)",
-    country %in% unlist(democracies[3]) ~ "African decolonization (1956-1968)",
-    country %in% unlist(democracies[4]) ~ "Third wave (1974-1988)",
-    country %in% unlist(democracies[5]) ~ "Post-soviet (1989-1994)",
-    country %in% unlist(democracies[6]) ~ "Color revolution (2000-2007)" 
-    )) %>% 
-  dplyr::mutate(yn = case_when(
-    satisfied == "very" ~ "yes",
-    satisfied == "fairly" ~ "yes",
-    satisfied == "not very" ~ "no",
-    satisfied == "not at all" ~ "no")) %>% 
-  dplyr::mutate(self_simple = case_when(
-    self_position %in% 0:3 ~ "Left",
-    self_position %in% 4:6 ~ "Center",
-    self_position %in% 7:10 ~ "Right")) %>%
-  drop_na() %>% 
-  add_count(waves, satisfied) %>% 
-  dplyr::mutate(prop = n/sum(n)) %>% 
-  dplyr::ungroup()
-#e <- arrange(e, year, desc(n))
-#e$country <- factor(e$country, levels = unique(e$country)) 
-e$waves  <- factor(e$waves,
-                   levels = c("Post-WWI (1919-1922)", 
-                              "Post-WWII (1945-1950)", 
-                              "African decolonization (1956-1968)",
-                              "Third wave (1974-1988)",
-                              "Post-soviet (1989-1994)",
-                              "Color revolution (2000-2007)"))
-e$satisfied  <- factor(e$satisfied , 
-                       levels = c("very", 
-                                  "fairly", 
-                                  "not very",
-                                  "not at all"))
-e$self_simple <- factor(e$self_simple,
-                        levels = c("Left",
-                                   "Center",
-                                   "Right"))
-```
- 
-Bonus: Democratic satisfaction across countries in waves of democratization
-```{r}
+<!-- democracies <- list( -->
+<!--   postWWI_1919_1922 = c("Greece", "Great Britain", "Sweden",  -->
+<!--                         "Portugal", "Spain"), -->
+<!--   postWWII_1945_1950 = c("France", "Germany", "Italy", "Austria", -->
+<!--                          "Belgium", "Denmark", "Norway", -->
+<!--                          "Finland", "Japan", "Argentina", -->
+<!--                          "Brazil"), -->
+<!--   africandecol_1956_1968 = c("South Africa", "Kenya"), -->
+<!--   thirdwave_1974_1988 = c("Greece", "Portugal", "Spain",  -->
+<!--                           "Argentina", "Brazil", "Chile", -->
+<!--                           "Philippines", "Pakistan", "South Korea", -->
+<!--                           "Taiwan"), -->
+<!--   postsoviet_1989_1994 = c("Poland", "Hungary", "East Germany", -->
+<!--                            "Czech Republic", "Bulgaria", -->
+<!--                            "Romania", "Estonia", -->
+<!--                             "Latvia", "Lithuania", -->
+<!--                            "Russian Federation", "Slovakia", "Slovenia", -->
+<!--                           "Albania"), -->
+<!--   colorrev_2000_2007 = c("Croatia", "Serbia", "Ukraine", "Kyrgyzstan", -->
+<!--                          "Belarus")) -->
+<!-- names(democracies) <- c("Post-WWI (1919-1922)", -->
+<!--                         "Post-WWII (1945_1950)", -->
+<!--                         "African decolonization (1956-1968)", -->
+<!--                         "Third wave (1974_1988)", -->
+<!--                         "Post-soviet (1989-1994)", -->
+<!--                         "Color revolution (2000-2007)") -->
+<!-- e <- cses_intl %>%  -->
+<!--   dplyr::filter(democratic_satisfaction == 1|2|4|5) %>%  -->
+<!--   dplyr::mutate(satisfied = case_when( -->
+<!--     democratic_satisfaction == 1 ~ "very", -->
+<!--     democratic_satisfaction == 2 ~ "fairly", -->
+<!--     democratic_satisfaction == 4 ~ "not very", -->
+<!--     democratic_satisfaction == 5 ~ "not at all")) %>% -->
+<!--   dplyr::filter(country %in% unlist(democracies)) %>%  -->
+<!--   dplyr::mutate(waves = case_when( -->
+<!--     country %in% unlist(democracies[1]) ~ "Post-WWI (1919-1922)", -->
+<!--     country %in% unlist(democracies[2]) ~ "Post-WWII (1945-1950)", -->
+<!--     country %in% unlist(democracies[3]) ~ "African decolonization (1956-1968)", -->
+<!--     country %in% unlist(democracies[4]) ~ "Third wave (1974-1988)", -->
+<!--     country %in% unlist(democracies[5]) ~ "Post-soviet (1989-1994)", -->
+<!--     country %in% unlist(democracies[6]) ~ "Color revolution (2000-2007)"  -->
+<!--     )) %>%  -->
+<!--   dplyr::mutate(yn = case_when( -->
+<!--     satisfied == "very" ~ "yes", -->
+<!--     satisfied == "fairly" ~ "yes", -->
+<!--     satisfied == "not very" ~ "no", -->
+<!--     satisfied == "not at all" ~ "no")) %>%  -->
+<!--   dplyr::mutate(self_simple = case_when( -->
+<!--     self_position %in% 0:3 ~ "Left", -->
+<!--     self_position %in% 4:6 ~ "Center", -->
+<!--     self_position %in% 7:10 ~ "Right")) %>% -->
+<!--   drop_na() %>%  -->
+<!--   add_count(waves, satisfied) %>%  -->
+<!--   dplyr::mutate(prop = n/sum(n)) %>%  -->
+<!--   dplyr::ungroup() -->
+<!-- #e <- arrange(e, year, desc(n)) -->
+<!-- #e$country <- factor(e$country, levels = unique(e$country))  -->
+<!-- e$waves  <- factor(e$waves, -->
+<!--                    levels = c("Post-WWI (1919-1922)",  -->
+<!--                               "Post-WWII (1945-1950)",  -->
+<!--                               "African decolonization (1956-1968)", -->
+<!--                               "Third wave (1974-1988)", -->
+<!--                               "Post-soviet (1989-1994)", -->
+<!--                               "Color revolution (2000-2007)")) -->
+<!-- e$satisfied  <- factor(e$satisfied ,  -->
+<!--                        levels = c("very",  -->
+<!--                                   "fairly",  -->
+<!--                                   "not very", -->
+<!--                                   "not at all")) -->
+<!-- e$self_simple <- factor(e$self_simple, -->
+<!--                         levels = c("Left", -->
+<!--                                    "Center", -->
+<!--                                    "Right")) -->
+<!-- ``` -->
 
-labels <- c("Post-WWI (1919-1922)" = "Post-WWI \n(1919-1922)", 
-            "Post-WWII (1945-1950)" = "Post-WWII \n(1945-1950)", 
-            "African decolonization (1956-1968)" = "African \ndecolonization \n(1956-1968)",
-            "Third wave (1974-1988)" = "Third wave \n(1974-1988)",
-            "Post-soviet (1989-1994)" = "Post-soviet \n(1989-1994)",
-            "Color revolution (2000-2007)" = "Color revolution \n(2000-2007)")
-e %>% 
-  dplyr::add_count(waves, yn) %>% 
-  dplyr::mutate(prop = n/sum(n)) %>% 
-  ggplot(aes(x = self_simple, 
-             y = prop,
-             fill = yn)) +
-  geom_bar(stat = "identity", position = "fill") +
-  labs(x = "Respondents' self-placement from Left to Right",
-       y = "Ratio",
-       caption = "
-       CSES IMD survey items; 118560 observations
-       Subset of available countries in CSES from list:
-       The post-WWI Wave: Eastern/Central Europe
-       The post-WWII Wave: Western Europe/Japan; Latin America (to 1948)
-       The African Decolonization Wave: Sub-Saharan Africa
-       The ‘Third’ Wave: Southern Europe, Latin America, Asia
-       The Post-Soviet Wave: Eastern Europe and Former Soviet Republics; Africa
-       The Color Revolutions: Eastern Europe and Former Soviet Republics
-       Respondents' self-placement on a 0-10 scale (IMD3006); Left = 0:3, Center = 4:6, Right = 7:10
-       Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No",
-       fill = "Satisfaction with democracy",
-       subtitle = "Countries in waves of democratization") +
-  facet_wrap(.~waves, labeller = labeller(waves = labels), ncol = 6) +
-  scale_fill_viridis_d() +
-  theme_classic() +
-  theme(legend.position = "bottom",
-        axis.text.x = element_text(angle = 40, hjust = 1),
-        plot.subtitle = element_text(hjust = 0.5)) +
-  scale_y_continuous(breaks = seq(0.00, 1.00, by = 0.50)) 
-```
+<!-- Bonus: Democratic satisfaction across countries in waves of democratization -->
+<!-- ```{r} -->
 
- 
- 
+<!-- labels <- c("Post-WWI (1919-1922)" = "Post-WWI \n(1919-1922)",  -->
+<!--             "Post-WWII (1945-1950)" = "Post-WWII \n(1945-1950)",  -->
+<!--             "African decolonization (1956-1968)" = "African \ndecolonization \n(1956-1968)", -->
+<!--             "Third wave (1974-1988)" = "Third wave \n(1974-1988)", -->
+<!--             "Post-soviet (1989-1994)" = "Post-soviet \n(1989-1994)", -->
+<!--             "Color revolution (2000-2007)" = "Color revolution \n(2000-2007)") -->
+<!-- e %>%  -->
+<!--   dplyr::add_count(waves, yn) %>%  -->
+<!--   dplyr::mutate(prop = n/sum(n)) %>%  -->
+<!--   ggplot(aes(x = self_simple,  -->
+<!--              y = prop, -->
+<!--              fill = yn)) + -->
+<!--   geom_bar(stat = "identity", position = "fill") + -->
+<!--   labs(x = "Respondents' self-placement from Left to Right", -->
+<!--        y = "Ratio", -->
+<!--        caption = " -->
+<!--        CSES IMD survey items; 118560 observations -->
+<!--        Subset of available countries in CSES from list: -->
+<!--        The post-WWI Wave: Eastern/Central Europe -->
+<!--        The post-WWII Wave: Western Europe/Japan; Latin America (to 1948) -->
+<!--        The African Decolonization Wave: Sub-Saharan Africa -->
+<!--        The ‘Third’ Wave: Southern Europe, Latin America, Asia -->
+<!--        The Post-Soviet Wave: Eastern Europe and Former Soviet Republics; Africa -->
+<!--        The Color Revolutions: Eastern Europe and Former Soviet Republics -->
+<!--        Respondents' self-placement on a 0-10 scale (IMD3006); Left = 0:3, Center = 4:6, Right = 7:10 -->
+<!--        Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No", -->
+<!--        fill = "Satisfaction with democracy", -->
+<!--        subtitle = "Countries in waves of democratization") + -->
+<!--   facet_wrap(.~waves, labeller = labeller(waves = labels), ncol = 6) + -->
+<!--   scale_fill_viridis_d() + -->
+<!--   theme_classic() + -->
+<!--   theme(legend.position = "bottom", -->
+<!--         axis.text.x = element_text(angle = 40, hjust = 1), -->
+<!--         plot.subtitle = element_text(hjust = 0.5)) + -->
+<!--   scale_y_continuous(breaks = seq(0.00, 1.00, by = 0.50))  -->
+<!-- ``` -->
+
+
