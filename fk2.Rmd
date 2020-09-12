@@ -4,7 +4,9 @@ subtitle: "Online Appendix"
 ---
 
 ```{r setup, include=FALSE}
-setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+# setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries

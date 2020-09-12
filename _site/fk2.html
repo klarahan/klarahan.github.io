@@ -326,9 +326,9 @@ $(document).ready(function () {
 <pre class="r"><code>library(lubridate)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;lubridate&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:base&#39;:
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
-##     date</code></pre>
+##     date, intersect, setdiff, union</code></pre>
 <pre class="r"><code>library(ggplot2)
 library(dplyr)</code></pre>
 <pre><code>## 
@@ -567,8 +567,8 @@ freq_by_rank</code></pre>
 <p>Which are most unique words for each Newspaper? (tf-idf)</p>
 <pre class="r"><code>news_words &lt;- news_words %&gt;%
   bind_tf_idf(word, Newspaper, n)</code></pre>
-<pre><code>## Warning in bind_tf_idf.data.frame(., word, Newspaper, n): A value for tf_idf is negative:
-## Input should have exactly one row per document-term combination.</code></pre>
+<pre><code>## Warning: A value for tf_idf is negative:
+##  Input should have exactly one row per document-term combination.</code></pre>
 <pre class="r"><code>news_words %&gt;%
   select(-total) %&gt;%
   arrange(desc(tf_idf))</code></pre>

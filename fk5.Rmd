@@ -6,7 +6,7 @@
   Hello, Website!
   
 ```{r}
-setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+# setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
 
 ```
   

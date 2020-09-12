@@ -4,8 +4,9 @@
   
 ---
 ```{r}
-setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
-
+# setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+Sys.setlocale(locale = "Korean")
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -25,124 +26,124 @@ library(extrafont)
 
 Load and prepare CSES survey data.
 ```{r eval=FALSE, include=FALSE}
-load("data/cses_imd.rdata")
-cses_all <- cses_imd %>% 
-  filter(IMD1006_NAM == "Republic of Korea"
-         ) %>% 
-  select(IMD1008_YEAR,   #election year
-         IMD3005_3,       #PARTY IDENTIFICATION: WHO
-         IMD3005_4,      #WHICH PARTY DO YOU FEEL CLOSEST TO
-         IMD3006,        #LEFT-RIGHT - SELF
-         IMD3008_A,       #LIKE-DISLIKE - PARTY A
-         IMD3008_B,       #LIKE-DISLIKE - PARTY B
-         IMD3008_C,       #LIKE-DISLIKE - PARTY C
-         IMD3008_D,       #LIKE-DISLIKE - PARTY D
-         IMD3008_E,       #LIKE-DISLIKE - PARTY E
-         IMD3008_F,       #LIKE-DISLIKE - PARTY F
-         IMD3010        #SATISFACTION WITH DEMOCRACY
-          ) %>% 
-  rename("year" = IMD1008_YEAR) %>% 
-  mutate_if(is.integer, as.factor) %>% 
-  as_tibble()
-
-# recode IMD3005_3 partyID 
-cses_all <-　cses_all %>% 
-  mutate(IMD3005_3 = recode(IMD3005_3,
-      "4100001" = "New Frontier Party (NFP)",
-      "4100002" = "Liberty Forward Party (LFP)",
-      "4100003" = "New Progressive Party (NPP)",
-      "4100004" = "Democratic United Party (DUP)",
-      "4100005" = "Unified Progressive Party (UPP)",
-      "4100006" = "Democratic Liberal Party", 
-      "4100007" = "Pro-Park Geun-hye Alliance",
-      "4100010" = "Millennium Democratic Party (MDP)",
-      "4100011" = "United Liberal Democrats (ULD)",
-      "4100012" = "Democratic People's Party",
-      "4100015" = "Democratic Labor Party (DLP)",
-      "4100016" = "Creative Korea Party (CKP)",
-      "4100017" = "Renewal of Korea Party",
-      "4100018" = "Democratic Party",
-      "4100019" = "Korea Youth Progress Party",
-      "4100020" = "National Integration 21",
-      "4100021" = "Our Party",
-      "4100022" = "Christian Party",
-      "4100023" = "New Korean Party of the Hope (NKPH)",
-      "9999988" = "NA",
-      "9999989" = "NA",
-      "9999990" = "NA", 
-      "9999991" = "NA",
-      "9999992" = "NA",
-      "9999997" = "NA",
-      "9999998" = "NA",
-      "9999999" = "NA")) %>% 
-  rename("partyID" = IMD3005_3) %>% 
-  na_if("NA") %>% 
-  drop_na()
-
-# recode parties to orientations 
-cses_all$partyID_binary <- case_when(
-  cses_all$partyID == "New Frontier Party (NFP)" ~ "Conservative",
-  cses_all$partyID == "Our Party" ~ "Liberal",
-  cses_all$partyID == "Democratic United Party (DUP)" ~ "Liberal",
-  cses_all$partyID == "Millennium Democratic Party (MDP)" ~ "Liberal",
-  cses_all$partyID == "Pro-Park Geun-hye Alliance" ~ "Conservative",
-  cses_all$partyID == "Democratic Labor Party (DLP)" ~ "Progressive",
-  cses_all$partyID == "Renewal of Korea Party" ~ "Liberal",
-  cses_all$partyID == "Unified Progressive Party (UPP)" ~ "Progressive",
-  cses_all$partyID == "Liberty Forward Party (LFP)" ~ "Conservative",
-  cses_all$partyID == "New Progressive Party (NPP)" ~ "Progressive",
-  cses_all$partyID == "United Liberal Democrats (ULD)" ~ "Conservative",
-  cses_all$partyID == "Democratic People's Party" ~ "Conservative",
-  cses_all$partyID == "Democratic Liberal Party" ~ "Liberal",
-  cses_all$partyID == "National Integration 21" ~ "Progressive"
-  ) 
-
-# recode IMD3005_4 #How close to you feel to this party
-cses_all <-　cses_all %>% 
-  mutate(
-    IMD3005_4 = recode(
-      IMD3005_4,
-      `1` = "VERY CLOSE",
-      `2` = "SOMEWHAT CLOSE",
-      `3` = "NOT VERY CLOSE",
-      `7` = "NA",
-      `8` = "NA",
-      `9` = "NA")) %>% 
-  rename("party_closeness" = IMD3005_4) 
-
-# recode IMD3006 #LEFT-RIGHT - SELF
-cses_all <-　cses_all %>% 
-  rename("self_position" = IMD3006)
-
-# recode IMD3010 #SATISFACTION WITH DEMOCRACY
-cses_all <- cses_all %>% 
-  mutate(
-    IMD3010 = recode(
-      IMD3010,
-      `1` = "VERY SATISFIED",
-      `2` = "FAIRLY SATISFIED",
-      `4` = "NOT VERY SATISFIED",
-      `5` = "NOT AT ALL SATISFIED",
-      `7` = NA_character_,
-      `8` = NA_character_)) %>% 
-  rename("democratic_satisfaction" = IMD3010)
-
-#recode like/dislike party
-cses_all <-　cses_all %>% 
-  rename("like_party_A" = IMD3008_A) %>% 
-  rename("like_party_B" = IMD3008_B) %>% 
-  rename("like_party_C" = IMD3008_C) %>% 
-  rename("like_party_D" = IMD3008_D) %>%
-  rename("like_party_E" = IMD3008_E) %>%
-  rename("like_party_F" = IMD3008_F) 
-
-rm(cses_imd)
-saveRDS(cses_all, "data/cses_korea.RDS")
+# load("data/cses_imd.rdata")
+# cses_all <- cses_imd %>% 
+#   filter(IMD1006_NAM == "Republic of Korea"
+#          ) %>% 
+#   select(IMD1008_YEAR,   #election year
+#          IMD3005_3,       #PARTY IDENTIFICATION: WHO
+#          IMD3005_4,      #WHICH PARTY DO YOU FEEL CLOSEST TO
+#          IMD3006,        #LEFT-RIGHT - SELF
+#          IMD3008_A,       #LIKE-DISLIKE - PARTY A
+#          IMD3008_B,       #LIKE-DISLIKE - PARTY B
+#          IMD3008_C,       #LIKE-DISLIKE - PARTY C
+#          IMD3008_D,       #LIKE-DISLIKE - PARTY D
+#          IMD3008_E,       #LIKE-DISLIKE - PARTY E
+#          IMD3008_F,       #LIKE-DISLIKE - PARTY F
+#          IMD3010        #SATISFACTION WITH DEMOCRACY
+#           ) %>% 
+#   rename("year" = IMD1008_YEAR) %>% 
+#   mutate_if(is.integer, as.factor) %>% 
+#   as_tibble()
+# 
+# # recode IMD3005_3 partyID 
+# cses_all <-　cses_all %>% 
+#   mutate(IMD3005_3 = recode(IMD3005_3,
+#       "4100001" = "New Frontier Party (NFP)",
+#       "4100002" = "Liberty Forward Party (LFP)",
+#       "4100003" = "New Progressive Party (NPP)",
+#       "4100004" = "Democratic United Party (DUP)",
+#       "4100005" = "Unified Progressive Party (UPP)",
+#       "4100006" = "Democratic Liberal Party", 
+#       "4100007" = "Pro-Park Geun-hye Alliance",
+#       "4100010" = "Millennium Democratic Party (MDP)",
+#       "4100011" = "United Liberal Democrats (ULD)",
+#       "4100012" = "Democratic People's Party",
+#       "4100015" = "Democratic Labor Party (DLP)",
+#       "4100016" = "Creative Korea Party (CKP)",
+#       "4100017" = "Renewal of Korea Party",
+#       "4100018" = "Democratic Party",
+#       "4100019" = "Korea Youth Progress Party",
+#       "4100020" = "National Integration 21",
+#       "4100021" = "Our Party",
+#       "4100022" = "Christian Party",
+#       "4100023" = "New Korean Party of the Hope (NKPH)",
+#       "9999988" = "NA",
+#       "9999989" = "NA",
+#       "9999990" = "NA", 
+#       "9999991" = "NA",
+#       "9999992" = "NA",
+#       "9999997" = "NA",
+#       "9999998" = "NA",
+#       "9999999" = "NA")) %>% 
+#   rename("partyID" = IMD3005_3) %>% 
+#   na_if("NA") %>% 
+#   drop_na()
+# 
+# # recode parties to orientations 
+# cses_all$partyID_binary <- case_when(
+#   cses_all$partyID == "New Frontier Party (NFP)" ~ "Conservative",
+#   cses_all$partyID == "Our Party" ~ "Liberal",
+#   cses_all$partyID == "Democratic United Party (DUP)" ~ "Liberal",
+#   cses_all$partyID == "Millennium Democratic Party (MDP)" ~ "Liberal",
+#   cses_all$partyID == "Pro-Park Geun-hye Alliance" ~ "Conservative",
+#   cses_all$partyID == "Democratic Labor Party (DLP)" ~ "Progressive",
+#   cses_all$partyID == "Renewal of Korea Party" ~ "Liberal",
+#   cses_all$partyID == "Unified Progressive Party (UPP)" ~ "Progressive",
+#   cses_all$partyID == "Liberty Forward Party (LFP)" ~ "Conservative",
+#   cses_all$partyID == "New Progressive Party (NPP)" ~ "Progressive",
+#   cses_all$partyID == "United Liberal Democrats (ULD)" ~ "Conservative",
+#   cses_all$partyID == "Democratic People's Party" ~ "Conservative",
+#   cses_all$partyID == "Democratic Liberal Party" ~ "Liberal",
+#   cses_all$partyID == "National Integration 21" ~ "Progressive"
+#   ) 
+# 
+# # recode IMD3005_4 #How close to you feel to this party
+# cses_all <-　cses_all %>% 
+#   mutate(
+#     IMD3005_4 = recode(
+#       IMD3005_4,
+#       `1` = "VERY CLOSE",
+#       `2` = "SOMEWHAT CLOSE",
+#       `3` = "NOT VERY CLOSE",
+#       `7` = "NA",
+#       `8` = "NA",
+#       `9` = "NA")) %>% 
+#   rename("party_closeness" = IMD3005_4) 
+# 
+# # recode IMD3006 #LEFT-RIGHT - SELF
+# cses_all <-　cses_all %>% 
+#   rename("self_position" = IMD3006)
+# 
+# # recode IMD3010 #SATISFACTION WITH DEMOCRACY
+# cses_all <- cses_all %>% 
+#   mutate(
+#     IMD3010 = recode(
+#       IMD3010,
+#       `1` = "VERY SATISFIED",
+#       `2` = "FAIRLY SATISFIED",
+#       `4` = "NOT VERY SATISFIED",
+#       `5` = "NOT AT ALL SATISFIED",
+#       `7` = NA_character_,
+#       `8` = NA_character_)) %>% 
+#   rename("democratic_satisfaction" = IMD3010)
+# 
+# #recode like/dislike party
+# cses_all <-　cses_all %>% 
+#   rename("like_party_A" = IMD3008_A) %>% 
+#   rename("like_party_B" = IMD3008_B) %>% 
+#   rename("like_party_C" = IMD3008_C) %>% 
+#   rename("like_party_D" = IMD3008_D) %>%
+#   rename("like_party_E" = IMD3008_E) %>%
+#   rename("like_party_F" = IMD3008_F) 
+# 
+# rm(cses_imd)
+# saveRDS(cses_all, "data/cses_korea.RDS")
 ```
 
 Further prepare CSES survey data.
 ```{r include=FALSE}
-readRDS("data/cses_korea.RDS")
+cses_all <- readRDS("data/cses_korea.RDS")
 a <- cses_all %>% 
   dplyr::select(like_party_A, year, partyID_binary, party_closeness,
                 self_position, democratic_satisfaction) %>% 
@@ -421,7 +422,6 @@ ggplot(a) +
               divider = ddecker()) +
   facet_wrap(govt_short~like_partyID, ncol = 4) +
   labs(x = "Dislike/like of government party",
-       y = element_blank(),
        caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1543 observations)
        Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
        Likeability rating of Parties A-I on a 0-10 scale (IMD3008); Strongly dislike = 0, Strongly like = 10
@@ -463,9 +463,7 @@ ggplot(a) +
                   fill=demsatis_3 ),
               divider = ddecker(), offset = 0.02) +
   facet_grid(.~govt_short) +
-  labs(x = element_blank(),
-       y = element_blank(),
-       caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1656 observations)
+  labs(caption = "CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1656 observations)
        Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
        Party identification (IMD3005_3); Which party do you feel closest to?
        Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No",
@@ -550,7 +548,7 @@ rm(prog, cons, Right, Left)
 ```
 
 Frequency of political dimension keywords
-```{r message=FALSE, warning=TRUE}
+```{r message=FALSE, warning=FALSE}
 kwordtypes_long <- bind_rows(ideol %>%
                           mutate(discourse = "ideological (conservative/progressive)"),
                         spati %>% 
@@ -627,7 +625,7 @@ spati_terms <- bind_rows(spati1, spati2, spati3, spati4, spati5, spati6)
 rm(spati1, spati2, spati3, spati4, spati5, spati6)
 
 
-ggplot(spati_terms, aes(x = timestamp, color = Newspaper)) +
+ggplot(spati_terms, aes(x = timestamp, fill = Newspaper)) +
   geom_bar(aes(x = prezterm, fill = Newspaper), 
            position = "fill", show.legend = TRUE) +
   facet_grid(~Keyword) +

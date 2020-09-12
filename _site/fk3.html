@@ -322,7 +322,10 @@ $(document).ready(function () {
 </div>
 
 
-<pre class="r"><code>setwd(&quot;~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io&quot;)</code></pre>
+<pre class="r"><code># setwd(&quot;~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io&quot;)
+setwd(&quot;C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io&quot;)
+Sys.setlocale(locale = &quot;Korean&quot;)</code></pre>
+<pre><code>## [1] &quot;LC_COLLATE=Korean_Korea.949;LC_CTYPE=Korean_Korea.949;LC_MONETARY=Korean_Korea.949;LC_NUMERIC=C;LC_TIME=Korean_Korea.949&quot;</code></pre>
 <pre class="r"><code>library(readr)
 library(dplyr)
 library(tidyr)
@@ -344,7 +347,6 @@ library(extrafont)</code></pre>
               divider = ddecker()) +
   facet_wrap(govt_short~like_partyID, ncol = 4) +
   labs(x = &quot;Dislike/like of government party&quot;,
-       y = element_blank(),
        caption = &quot;CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1543 observations)
        Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
        Likeability rating of Parties A-I on a 0-10 scale (IMD3008); Strongly dislike = 0, Strongly like = 10
@@ -381,9 +383,7 @@ library(extrafont)</code></pre>
                   fill=demsatis_3 ),
               divider = ddecker(), offset = 0.02) +
   facet_grid(.~govt_short) +
-  labs(x = element_blank(),
-       y = element_blank(),
-       caption = &quot;CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1656 observations)
+  labs(caption = &quot;CSES IMD survey items from the years 2000, 2004, 2008, 2012 (1656 observations)
        Governments: Liberal = 2004 and 2008, Conservative = 2000 and 2012
        Party identification (IMD3005_3); Which party do you feel closest to?
        Satisfaction with democracy (IMD3010); very/ fairly = Yes, not very/not at all = No&quot;,
@@ -20413,7 +20413,7 @@ spati_terms &lt;- bind_rows(spati1, spati2, spati3, spati4, spati5, spati6)
 rm(spati1, spati2, spati3, spati4, spati5, spati6)
 
 
-ggplot(spati_terms, aes(x = timestamp, color = Newspaper)) +
+ggplot(spati_terms, aes(x = timestamp, fill = Newspaper)) +
   geom_bar(aes(x = prezterm, fill = Newspaper), 
            position = &quot;fill&quot;, show.legend = TRUE) +
   facet_grid(~Keyword) +
