@@ -1,4 +1,5 @@
 ---
+<<<<<<< HEAD
   title: "Chapter 4: Framing Unification"
   subtitle: "Online Appendix"
 ---
@@ -195,3 +196,9 @@ all_news %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   scale_y_continuous(labels = scales::percent)
 ```
+=======
+  title: "My Website"
+---
+  
+  Hello, Website!
+>>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253

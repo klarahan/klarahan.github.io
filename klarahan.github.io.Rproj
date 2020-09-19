@@ -13,4 +13,8 @@ RnwWeave: Sweave
 LaTeX: pdfLaTeX
 
 BuildType: Website
+<<<<<<< HEAD
 WebsitePath: ~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io
+=======
+WebsitePath: C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io
+>>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253

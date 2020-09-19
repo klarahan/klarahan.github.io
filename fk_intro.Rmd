@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ---
   title: "Framing Korea (Lexington, 2020)"
 ---
@@ -19,3 +20,26 @@ The original newspaper articles cannot be shared due to data ownership. Instead,
 
 Beware of Korean: If you cannot read Korean, this paper has some ideas on how to automatically translate small numbers of words in R:
 https://doi.org/10.1093/pan/mpu019 (Lucas et al, 2015)
+=======
+---
+  title: "Framing Korea (Lexington, 2020)"
+---
+  
+This book is available from Rowman & Littlefield. This is the Online Appendix.
+
+This page provides all the supplementary tables and figures that haven't made it into the book. For the main text, read the book!
+
+To replicate the analyses with my code, you need R:
+https://dss.princeton.edu/training/RStudio101.pdf 
+Countles other sources on how to start are free and online.
+
+I used the following libraries for R:
+tidytext: https://www.tidytextmining.com/index.html
+stm: https://www.structuraltopicmodel.com/
+stminsights: https://github.com/cschwem2er/stminsights 
+
+The original newspaper articles cannot be shared due to data ownership. Instead, I provide the RDS files of the processed text that cannot be like a newspaper article.
+
+Beware of Korean: If you cannot read Korean, this paper has some ideas on how to automatically translate small numbers of words in R:
+https://doi.org/10.1093/pan/mpu019 (Lucas et al, 2015)
+>>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253

@@ -4,6 +4,7 @@ subtitle: "Online Appendix"
 ---
 
 ```{r setup, include=FALSE}
+<<<<<<< HEAD
 setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
 # setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
 Sys.setlocale(locale = "Korean")
@@ -11,6 +12,9 @@ Sys.setlocale(locale = "Korean")
 
 Load libraries
 ```{r}
+=======
+setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+>>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253
 library(lubridate)
 library(ggplot2)
 library(dplyr)
@@ -616,7 +620,11 @@ plot(prep_point, covariate = "Newspaper",
 ```
 
 Plot topic prevalences by time, without smoothing lines.
+<<<<<<< HEAD
 ```{r}
+=======
+```{r eval=FALSE, include=FALSE}
+>>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253
 # prepare dataframe with the package stm_insights
 effects_point <- get_effects(estimates = prep_point,
                            variable = 'Days',
