@@ -1,9 +1,0 @@
----
-title: "About This Website"
----
-
-<<<<<<< HEAD
-If you are a reviewer, please click on the next tab "Framing Korea" for the Online Appendix.
-=======
-More about this website.
->>>>>>> 206c52833a0e7671a4f73f0cb421be8270593253
