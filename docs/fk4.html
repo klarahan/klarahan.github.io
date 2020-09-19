@@ -322,8 +322,129 @@ $(document).ready(function () {
 </div>
 
 
-<p>Hello, Website!</p>
-<pre class="r"><code>setwd(&quot;~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io&quot;)</code></pre>
+<p>Load processed data</p>
+<pre class="r"><code># saveRDS(all_news, &quot;data/unification_news.RDS&quot;)
+all_news &lt;- readRDS(&quot;data/unification_news.RDS&quot;)</code></pre>
+<pre class="r"><code># save legit stopwords, and add some
+stopwords &lt;- tibble(
+  tokens = stopwords::stopwords(&quot;ko&quot;, source = &quot;stopwords-iso&quot;),
+  lexicon = &quot;stopwords-iso&quot;) 
+stopwords &lt;- stopwords %&gt;% 
+  add_row(tokens = c(&quot;들이&quot;, &quot;하기&quot;, &quot;그것&quot;, &quot;때문&quot;, &quot;것으로&quot;, &quot;있는&quot;, &quot;위해&quot;,  
+                     &quot;대한&quot;, &quot;등을&quot;, &quot;했다&quot;, &quot;말했다&quot;, &quot;만원&quot;, &quot;한다&quot;, &quot;지난&quot;, 
+                     &quot;것은&quot;,&quot; 것이&quot;, &quot;위한&quot;, &quot;것이다&quot;, &quot;하는&quot;, &quot;있는&quot;, &quot;이라고&quot;,
+                     &quot;이날&quot;, &quot;밝혔다&quot;, &quot;오후&quot;, &quot;통해&quot;, &quot;대해&quot;, &quot;그는&quot;, &quot;나는&quot;, 
+                     &quot;것이&quot;, &quot;없다&quot;, &quot;같은&quot;, &quot;내가&quot;, &quot;있었다&quot;, &quot;경우&quot;, &quot;등이&quot;,
+                     &quot;그는&quot;, &quot;지음&quot;, &quot;우리는&quot;, &quot;아니라&quot;, &quot;없는&quot;, &quot;것을&quot;, &quot;씨는&quot;,
+                     &quot;억원&quot;, &quot;당시&quot;, &quot;지난해&quot;, &quot;현재&quot;, &quot;이에&quot;, &quot;관련&quot;, &quot;하고&quot;, 
+                     &quot;그런&quot;, &quot;그의&quot;, &quot;가장&quot;, &quot;많은&quot;, &quot;있습니다&quot;, &quot;일까지&quot;, &quot;오는&quot;, 
+                     &quot;일부터&quot;, &quot;오전&quot;, &quot;가운데&quot;, &quot;다시&quot;, &quot;라는&quot;, &quot;모든&quot;, &quot;라고&quot;, 
+                     &quot;그가&quot;, &quot;세기&quot;, &quot;것도&quot;, &quot;이를&quot;, &quot;있다는&quot;, &quot;특히&quot;, &quot;이어&quot;,
+                     &quot;자신의&quot;, &quot;때문이다&quot;, &quot;많이&quot;, &quot;않고&quot;, &quot;새로운&quot;, &quot;합니다&quot;,
+                     &quot;된다&quot;, &quot;등의&quot;, &quot;이렇게&quot;, &quot;아니다&quot;, &quot;지금&quot;, &quot;보면&quot;, &quot;있을&quot;, 
+                     &quot;우리가&quot;, &quot;사람들이&quot;, &quot;이제&quot;, &quot;있어&quot;, &quot;연다&quot;, &quot;최근&quot;, 
+                     &quot;계획이다&quot;, &quot;올해&quot;, &quot;이후&quot;), 
+          lexicon = &quot;stopwords-iso&quot;) %&gt;% 
+  rename(word = tokens)</code></pre>
+<p>Process data</p>
+<pre class="r"><code>tidy_news &lt;- all_news %&gt;%
+  dplyr::mutate(article =  row_number()) %&gt;%
+  tidytext::unnest_tokens(word, Body) %&gt;% 
+  dplyr::anti_join(stopwords)  </code></pre>
+<pre><code>## Joining, by = &quot;word&quot;</code></pre>
+<p>Korean sentiment lexicon</p>
+<pre><code>## Parsed with column specification:
+## cols(
+##   term = col_character()
+## )
+## Parsed with column specification:
+## cols(
+##   term = col_character()
+## )</code></pre>
+<p>Count the emotional words</p>
+<pre class="r"><code>senti_news &lt;- tidy_news %&gt;% 
+  inner_join(senti) %&gt;%
+  count(Newspaper, Prezparty, sentiment) %&gt;%
+  tidyr::spread(sentiment, n, fill = 0) %&gt;%
+  mutate(sentiment = positive - negative) %&gt;% 
+  group_by(Newspaper, Prezparty) %&gt;% 
+  summarise(m = mean(sentiment)) %&gt;% 
+  mutate(density = m/sum(m)) </code></pre>
+<pre><code>## Joining, by = &quot;word&quot;</code></pre>
+<pre class="r"><code>ggplot(senti_news, aes(Prezparty, density, fill = Prezparty)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = &quot;governments (1990-2014)&quot;, y = &quot;% of net positive sentiment words&quot;) +
+  facet_wrap(~Newspaper, ncol = 2) +
+  scale_fill_grey() +
+  theme_bw() +
+  scale_y_continuous(labels = scales::percent)</code></pre>
+<p><img src="fk4_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Count sentiment words</p>
+<pre class="r"><code>senti_word_counts &lt;- tidy_news %&gt;%
+  inner_join(senti) %&gt;%
+  count(word, sentiment, sort = TRUE) %&gt;%
+  ungroup()</code></pre>
+<pre><code>## Joining, by = &quot;word&quot;</code></pre>
+<pre class="r"><code>senti_word_counts %&gt;%
+  group_by(sentiment) %&gt;%
+  top_n(10) %&gt;%
+  ungroup() %&gt;%
+  mutate(word = reorder(word, n)) %&gt;%
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = &quot;free_y&quot;) +
+  labs(y = &quot;Contribution to sentiment&quot;,
+       x = NULL) +
+  coord_flip() +
+  scale_fill_grey() +
+  theme_bw()</code></pre>
+<pre><code>## Selecting by n</code></pre>
+<p><img src="fk4_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Did negativity increase in specific administrations?</p>
+<pre class="r"><code>senti_news_admin &lt;- tidy_news %&gt;%
+  inner_join(senti) %&gt;%
+  count(Newspaper, Government, sentiment) %&gt;%
+  tidyr::spread(sentiment, n, fill = 0) %&gt;%
+  mutate(sentiment = positive - negative) %&gt;% 
+  group_by(Newspaper, Government) %&gt;% 
+  summarise(m = mean(sentiment)) %&gt;% 
+  mutate(density = m/sum(m)) </code></pre>
+<pre><code>## Joining, by = &quot;word&quot;</code></pre>
+<pre class="r"><code>shortgov &lt;- c(&quot;1990-1993\nRoh TW&quot;, &quot;1993-1998\nKim YS&quot;, &quot;1998-2003\nKim DJ&quot;, &quot;2004-2008\nRoh MH&quot;, &quot;2008-2013\nLee MB&quot;, &quot;2013-2014\nPark GH&quot;)
+  
+ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
+  geom_col(position = &quot;dodge&quot;) +
+  labs(x = &quot;administrations&quot;, y = &quot;% of net positive sentiment words&quot;) +
+  # facet_wrap(~Newspaper, ncol = 1, scales = &quot;free_y&quot;) +
+  scale_fill_grey() +
+  theme_bw() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(labels = shortgov)</code></pre>
+<p><img src="fk4_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Sentiment words in articles that contain the word “nuclear”:</p>
+<pre class="r"><code>all_news %&gt;%
+  filter(stringr::str_detect(Body, &quot;핵&quot;)) %&gt;% 
+  dplyr::mutate(article =  row_number()) %&gt;%
+  tidytext::unnest_tokens(word, Body) %&gt;% 
+  dplyr::anti_join(stopwords) %&gt;% 
+  inner_join(senti) %&gt;%
+  count(Newspaper, Prezparty, Government, sentiment) %&gt;%
+  tidyr::spread(sentiment, n, fill = 0) %&gt;%
+  mutate(sentiment = positive - negative) %&gt;% 
+  group_by(Newspaper, Government) %&gt;% 
+  summarise(m = mean(sentiment)) %&gt;% 
+  mutate(density = m/sum(m)) %&gt;% 
+  ggplot(aes(Government, density, fill = Newspaper)) +
+  geom_col(show.legend = FALSE, position = &quot;dodge&quot;) +
+  labs(x = &quot;administrations&quot;, y = &quot;% of net positive sentiment words&quot;) +
+  # facet_wrap(~Newspaper, ncol = 2, scales = &quot;free_y&quot;) +
+  scale_fill_grey() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_y_continuous(labels = scales::percent)</code></pre>
+<pre><code>## Joining, by = &quot;word&quot;
+## Joining, by = &quot;word&quot;</code></pre>
+<p><img src="fk4_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 
 
 
