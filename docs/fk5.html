@@ -322,61 +322,10 @@ $(document).ready(function () {
 </div>
 
 
-<p>Hello, Website!</p>
-<pre class="r"><code>setwd(&quot;~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io&quot;)
-library(lubridate)
+<pre class="r"><code>library(lubridate)
 library(ggplot2)
 library(dplyr)
-library(tidytext)
-#library(tidystm) </code></pre>
-<p>Prepare data</p>
-<pre class="r"><code># chosun &lt;- readxl::read_xls(&quot;data/all_issues.xls&quot;, 
-#                            sheet = &quot;Chosun_복지&quot;) %&gt;%
-#   mutate(Newspaper = &quot;Chosun&quot;) %&gt;%
-#   mutate(Date = ymd(Date))
-# chosun$Body &lt;- chosun$Body %&gt;%
-#   gsub(&quot;&lt;.*?&gt;&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   gsub(&quot;[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   gsub(&quot;....기자|....특파원&quot;, &quot; &quot;, ., perl = TRUE)%&gt;%
-#   gsub(&quot;종이신문보기&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   stringr::str_squish()
-# 
-# hani &lt;- bind_rows(readxl::read_xls(&quot;data/all_issues.xls&quot;, 
-#                                    sheet = &quot;Hani_복지&quot;)) %&gt;%
-#   mutate(Newspaper = &quot;Hankyoreh&quot;) %&gt;%
-#   mutate(Date = ymd(Date)) %&gt;%
-#   arrange(Date)
-# hani$Body &lt;- hani$Body %&gt;%
-#   gsub(&quot;&lt;.*?&gt;&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   gsub(&quot;[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   gsub(&quot;....기자|....특파원&quot;, &quot; &quot;, ., perl = TRUE) %&gt;%
-#   stringr::str_squish()
-# 
-# hankook &lt;- bind_rows(readxl::read_xls(&quot;data/all_issues.xls&quot;, sheet = &quot;Hangook_복지&quot;)) %&gt;%
-#   mutate(Newspaper = &quot;Hankook&quot;) %&gt;%
-#   mutate(Date = ymd(Date)) %&gt;%
-#   arrange(Date)
-# 
-# all_news &lt;- bind_rows(chosun, hani) %&gt;%
-#   mutate(Government = case_when(Date &gt;= &quot;1990-01-01&quot; &amp; Date &lt;= &quot;1993-02-24&quot; ~ &quot;1990-1993 Roh TW&quot;,
-#                                 Date &gt;= &quot;1993-02-25&quot; &amp; Date &lt;= &quot;1998-02-24&quot; ~ &quot;1993-1998 Kim YS&quot;,
-#                                 Date &gt;= &quot;1998-02-25&quot; &amp; Date &lt;= &quot;2003-02-24&quot; ~ &quot;1998-2003 Kim DJ&quot;,
-#                                 Date &gt;= &quot;2003-02-25&quot; &amp; Date &lt;= &quot;2008-02-24&quot; ~ &quot;2003-2008 Roh MH&quot;,
-#                                 Date &gt;= &quot;2008-02-25&quot; &amp; Date &lt;= &quot;2013-02-24&quot; ~ &quot;2008-2013 Lee MB&quot;,
-#                                 Date &gt;= &quot;2013-02-25&quot; &amp; Date &lt;= &quot;2014-12-31&quot; ~ &quot;2013-2014 Park GH&quot;)) %&gt;%
-#   mutate(Prezparty = case_when(Date &gt;= &quot;1990-01-01&quot; &amp; Date &lt;= &quot;1993-02-24&quot; ~ &quot;Conservative&quot;,
-#                                 Date &gt;= &quot;1993-02-25&quot; &amp; Date &lt;= &quot;1998-02-24&quot; ~ &quot;Conservative&quot;,
-#                                 Date &gt;= &quot;1998-02-25&quot; &amp; Date &lt;= &quot;2003-02-24&quot; ~ &quot;Liberal&quot;,
-#                                 Date &gt;= &quot;2003-02-25&quot; &amp; Date &lt;= &quot;2008-02-24&quot; ~ &quot;Liberal&quot;,
-#                                 Date &gt;= &quot;2008-02-25&quot; &amp; Date &lt;= &quot;2013-02-24&quot; ~ &quot;Conservative&quot;,
-#                                 Date &gt;= &quot;2013-02-25&quot; &amp; Date &lt;= &quot;2014-12-31&quot; ~ &quot;Conservative&quot;)) 
-# rm(chosun, hani)
-# 
-# all_news %&gt;%
-#     filter(stringr::str_detect(Title, &quot;스모그&quot;))
-# 
-# hankook %&gt;%
-#     filter(stringr::str_detect(Title, &quot;쓰레기처럼 버려지는 공동체의식&quot;))</code></pre>
+library(tidytext)</code></pre>
 <p>Load processed data</p>
 <pre class="r"><code># saveRDS(all_news, &quot;data/welfare_news.RDS&quot;)
 all_news &lt;- readRDS(&quot;data/welfare_news.RDS&quot;)</code></pre>
@@ -390,7 +339,7 @@ all_news &lt;- readRDS(&quot;data/welfare_news.RDS&quot;)</code></pre>
   scale_fill_grey() +
   theme_bw() +
   scale_x_discrete(labels = shortgov)</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>Save stopwords</p>
 <pre class="r"><code># save legit stopwords, and add some
 stopwords &lt;- tibble(
@@ -453,7 +402,7 @@ stopwords &lt;- stopwords %&gt;%
   scale_fill_grey() +
   theme_bw() +
   scale_y_continuous(labels = scales::percent)</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>Did negativity increase in specific administrations?</p>
 <pre class="r"><code>senti_news_admin &lt;- tidy_news %&gt;%
   inner_join(senti) %&gt;%
@@ -474,7 +423,7 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
   theme_bw() +
   scale_y_continuous(labels = scales::percent) +
   scale_x_discrete(labels = shortgov)</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>Sentiment in articles that contain keyword “National Parliament”</p>
 <pre class="r"><code>all_news %&gt;%
   filter(stringr::str_detect(Body, &quot;국회&quot;)) %&gt;% 
@@ -497,7 +446,7 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
   scale_y_continuous(labels = scales::percent) </code></pre>
 <pre><code>## Joining, by = &quot;word&quot;
 ## Joining, by = &quot;word&quot;</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>Sentiments in articles that contain keyword “Taxes”</p>
 <pre class="r"><code>all_news %&gt;%
   filter(stringr::str_detect(Body, &quot;세금&quot;)) %&gt;% 
@@ -526,7 +475,7 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
   scale_y_continuous(labels = scales::percent) </code></pre>
 <pre><code>## Joining, by = &quot;word&quot;
 ## Joining, by = &quot;word&quot;</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 <p>Sentiments in articles that contain keyword “Taxes” since 1990</p>
 <pre class="r"><code>all_news %&gt;%
   filter(stringr::str_detect(Body, &quot;세금&quot;)) %&gt;% 
@@ -559,7 +508,7 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
            colour = &quot;red&quot;, size = 0.5)  </code></pre>
 <pre><code>## Joining, by = &quot;word&quot;
 ## Joining, by = &quot;word&quot;</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>Sentiments in articles that contain keyword “cost-free”</p>
 <pre class="r"><code>all_news %&gt;%
   filter(stringr::str_detect(Body, &quot;무상&quot;)) %&gt;% 
@@ -583,7 +532,7 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
   scale_x_discrete(labels = shortgov)</code></pre>
 <pre><code>## Joining, by = &quot;word&quot;
 ## Joining, by = &quot;word&quot;</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 <p>Sentiments in articles that contain keyword “National Assembly” by administrations</p>
 <pre class="r"><code>all_news %&gt;%
   filter(stringr::str_detect(Body, &quot;국회&quot;)) %&gt;% 
@@ -604,10 +553,11 @@ ggplot(senti_news_admin, aes(Government, density, fill = Newspaper)) +
   scale_fill_grey() +
   theme_bw() +
   scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels = shortgov)</code></pre>
+  scale_x_discrete(labels = shortgov) +
+  theme(axis.text.x = element_text(angle = 45))</code></pre>
 <pre><code>## Joining, by = &quot;word&quot;
 ## Joining, by = &quot;word&quot;</code></pre>
-<p><img src="fk5_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="fk5_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 
 
 

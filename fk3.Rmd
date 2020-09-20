@@ -3,7 +3,7 @@
   subtitle: "Online Appendix"
   
 ---
-```{r}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
 # setwd("C:/Users/han/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
 Sys.setlocale(locale = "Korean")

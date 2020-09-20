@@ -3,19 +3,18 @@
   subtitle: "Online Appendix"
 ---
   
-  Hello, Website!
-  
-```{r}
+```{r include=FALSE}
 setwd("~/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/klarahan.github.io")
+```
+
+```{r}
 library(lubridate)
 library(ggplot2)
 library(dplyr)
 library(tidytext)
-#library(tidystm) 
 ```
 
-Prepare data
-```{r}
+```{r eval=FALSE, include=FALSE}
 # chosun <- readxl::read_xls("data/all_issues.xls", 
 #                            sheet = "Chosun_복지") %>%
 #   mutate(Newspaper = "Chosun") %>%
@@ -314,6 +313,7 @@ all_news %>%
   scale_fill_grey() +
   theme_bw() +
   scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(labels = shortgov)
+  scale_x_discrete(labels = shortgov) +
+  theme(axis.text.x = element_text(angle = 45))
 
 ```
