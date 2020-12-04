@@ -1,0 +1,98 @@
+---
+title: "Chapter 1: Introduction"
+subtitle: "Online Appendix"
+---
+
+```{r setup, include=FALSE}
+setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
+Sys.setlocale(locale = "Korean")
+```
+
+Load libraries
+```{r message=FALSE, warning=FALSE}
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+```
+
+Load the data.
+```{r}
+data_wel <- readRDS("data/data_wel.RDS")
+data_uni <- readRDS("data/data_uni.RDS")
+data_econ <- readRDS("data/data_econ.RDS")
+data_ideo <- readRDS("data/data_ideo.RDS")
+data_dem <- readRDS("data/data_dem.RDS")
+```
+
+
+```{r}
+
+pdf("1_trend_econdem.pdf", width=7, height=4)
+data_econ %>%
+  select(Date, Newspaper, Keyword) %>% 
+  filter(!Keyword %in% c("left", "right")) %>% 
+  mutate(Date = (year(Date))) %>%
+  count(Date, Newspaper, Keyword) %>% 
+  mutate(Keyword = recode(Keyword, econdem = "keyword: economic democratization")) %>% 
+  mutate(Keyword = forcats::fct_reorder(Keyword, desc(n))) %>%
+  ggplot(aes(Date, n, fill = Newspaper)) +
+  geom_col() +
+  labs(x = "Year",
+       y = "Count of articles",
+       caption = "x-axis shows the trend of yearly sums") +
+  scale_fill_grey() +
+  facet_grid(Newspaper~Keyword) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "none") 
+dev.off()
+
+```
+
+```{r}
+data_econ %>%
+  filter(!Keyword %in% c("left", "right")) %>% 
+  mutate(Date = (year(Date))) %>%
+  count(Date, Newspaper, Keyword) %>% 
+  mutate(Keyword = recode(Keyword, econdem = "economic democratization")) %>% 
+  mutate(Keyword = forcats::fct_reorder(Keyword, desc(n))) %>%
+  ggplot(aes(Date, n, fill = Newspaper)) +
+  geom_area() +
+  labs(x = "Year",
+       y = "Count of articles",
+       caption = "x-axis shows the trend of yearly sums") +
+  scale_fill_grey() +
+  facet_grid(Newspaper~Keyword) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "none") 
+
+```
+
+Trends of keywords
+```{r}
+# pdf("1_trend_news.pdf", width=7, height=4)
+data %>%
+  select(Date, Newspaper, Keyword) %>% 
+  filter(!Keyword %in% c("left", "right")) %>% 
+  mutate(Date = (year(Date))) %>%
+  count(Date, Newspaper, Keyword) %>% 
+  mutate(Keyword = recode(Keyword, econdem = "economic\ndemocratization")) %>% 
+  mutate(Keyword = forcats::fct_reorder(Keyword, desc(n))) %>%
+  ggplot(aes(Date, n, fill = Newspaper)) +
+  geom_area() +
+  labs(x = "Years 1990 to 2014",
+       y = "Count of articles",
+       subtitle = "Keywords",
+       caption = "x-axis shows the trend of yearly sums") +
+  scale_fill_grey() +
+  facet_grid(Newspaper~Keyword) +
+  theme_minimal() +
+  theme(plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "none") +
+  scale_x_discrete(breaks = c("1990", "2014")) 
+
+# dev.off()
+
+```
