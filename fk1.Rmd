@@ -3,8 +3,10 @@ title: "Chapter 1: Introduction"
 subtitle: "Online Appendix"
 ---
 
+## Prep
 ```{r setup, include=FALSE}
 setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
+localeToCharset()
 Sys.setlocale(locale = "Korean")
 ```
 
@@ -14,6 +16,8 @@ library(lubridate)
 library(ggplot2)
 library(dplyr)
 library(tidytext)
+library(quanteda)
+library(KoNLP)
 ```
 
 Load the data.
@@ -25,10 +29,10 @@ data_ideo <- readRDS("data/data_ideo.RDS")
 data_dem <- readRDS("data/data_dem.RDS")
 ```
 
-
+## Overview
+Trend of economic democratization 
 ```{r}
-
-pdf("1_trend_econdem.pdf", width=7, height=4)
+# pdf("1_trend_econdem.pdf", width=7, height=4)
 data_econ %>%
   select(Date, Newspaper, Keyword) %>% 
   filter(!Keyword %in% c("left", "right")) %>% 
@@ -46,31 +50,295 @@ data_econ %>%
   theme_minimal() +
   theme(plot.subtitle = element_text(hjust = 0.5),
         legend.position = "none") 
-dev.off()
-
+# dev.off()
 ```
 
+Total trend of news article volumes
 ```{r}
+data_count_yearly <- readRDS("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io/data/data_count_yearly") %>% 
+  group_by(Date, Newspaper) %>% 
+  summarise(total_n = sum(n))  
+
+pdf("1_trend_total.pdf", width=7, height=4)
 data_econ %>%
+  select(Date, Newspaper, Keyword) %>% 
+  filter(!Keyword %in% c("left", "right")) %>% 
+  mutate(Date = year(Date)) %>%    
+  count(Date, Newspaper, Keyword) %>% 
+  inner_join(data_count_yearly) %>% 
+  group_by(Date, Newspaper, Keyword) %>% 
+  mutate(perc = n/total_n) %>% 
+  mutate(Keyword = recode(Keyword, econdem = "keyword: economic democratization")) %>% 
+  mutate(Keyword = forcats::fct_reorder(Keyword, desc(n))) %>%
+  ggplot(aes(Date, total_n, linetype = Newspaper)) +
+  geom_line() +
+  geom_smooth(method = glm, aes(fill = Newspaper), colour="black") +
+  labs(x = "Year",
+       y = "Count of total articles",
+       caption = "fitted generalized linear model") +
+  scale_fill_grey() +
+  theme_minimal() 
+dev.off()
+```
+
+Total ratio of economic democratization per newspaper
+```{r}
+data_count_yearly <- readRDS("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io/data/data_count_yearly") %>% 
+  group_by(Date, Newspaper) %>% 
+  summarise(total_n = sum(n))  
+
+# pdf("1_trend_econdem_relative.pdf", width=7, height=4)
+data_econ %>%
+  select(Date, Newspaper, Keyword) %>% 
   filter(!Keyword %in% c("left", "right")) %>% 
   mutate(Date = (year(Date))) %>%
   count(Date, Newspaper, Keyword) %>% 
-  mutate(Keyword = recode(Keyword, econdem = "economic democratization")) %>% 
+  inner_join(data_count_yearly) %>% 
+  group_by(Date, Newspaper, Keyword) %>% 
+  mutate(perc = n/total_n) %>% 
+  mutate(Keyword = recode(Keyword, econdem = "keyword: economic democratization")) %>% 
   mutate(Keyword = forcats::fct_reorder(Keyword, desc(n))) %>%
-  ggplot(aes(Date, n, fill = Newspaper)) +
-  geom_area() +
+  ggplot() +
+  geom_col(aes(Date, perc, fill = Newspaper)) +
   labs(x = "Year",
-       y = "Count of articles",
-       caption = "x-axis shows the trend of yearly sums") +
+       y = "Percentage of total",
+       caption = "x-axis computed from the yearly sums") +
   scale_fill_grey() +
   facet_grid(Newspaper~Keyword) +
   theme_minimal() +
   theme(plot.subtitle = element_text(hjust = 0.5),
-        legend.position = "none") 
+        legend.position = "none")
+# dev.off()
 
 ```
 
-Trends of keywords
+## Content of economic democratization 
+```{r}
+toks <- readRDS("data/data_toks_econ")
+
+```
+
+Plot most unique words by each newspaper.
+```{r}
+news_words %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(Newspaper) %>% 
+  top_n(15) %>% 
+  ungroup() %>%
+  ggplot(aes(word, tf_idf, fill = Newspaper)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(Newspaper~., ncol = 3, scales = "free") +
+  coord_flip() +
+  scale_fill_grey() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+## Left-Right meanings from newspaper text
+Load and prepare data
+```{r}
+corpus <- readRDS("data/df_corpus")
+#Data Prep
+prog <- bind_rows(corpus %>% filter(Keyword == "Progressive")) 
+cons <- bind_rows(corpus %>% filter(Keyword == "Conservative"))   
+Right <- bind_rows(corpus %>% filter(Keyword == "Right")) 
+Left <- bind_rows(corpus %>% filter(Keyword == "Left"))
+
+ideol <- bind_rows(prog, cons) %>%
+  mutate(timestamp = ymd(Date)) %>%
+  mutate(prezterm = Date) 
+
+spati <- bind_rows(Left, Right) %>%
+  mutate(timestamp = ymd(Date)) %>%
+  mutate(prezterm = Date) 
+
+rm(prog, cons, Right, Left)
+
+```
+
+Frequency of political dimension keywords
+```{r message=FALSE, warning=FALSE}
+kwordtypes_long <- bind_rows(ideol %>%
+                          mutate(discourse = "ideological (conservative/progressive)"),
+                        spati %>% 
+                          mutate(discourse = "spatial (Right/Left)")) %>%
+  mutate(timestamp(ymd(Date)))
+
+ggplot(kwordtypes_long, aes(x = timestamp, linetype = Newspaper)) +
+  geom_freqpoly(position = "identity", bins = 15, show.legend = TRUE) +
+  facet_wrap(~discourse, nrow = 2) +
+  labs(x = "year", y = "count of keywords",
+       title = "Frequency of categories by two dimensions") +
+  theme_bw() 
+```
+
+Ideological dimension usage by government administation
+```{r echo=FALSE}
+
+ideol1 <- ideol %>%
+  mutate(prezterm = "t1") %>%
+  filter(Date >= as.Date("1990-1-1") & Date <= as.Date("1992-12-31"))
+ideol2 <- ideol %>%
+  mutate(prezterm = "t2") %>%
+  filter(Date >= as.Date("1993-1-1") & Date <= as.Date("1997-12-31"))
+ideol3 <- ideol %>%
+  mutate(prezterm = "t3") %>%
+  filter(Date >= as.Date("1998-1-1") & Date <= as.Date("2002-12-31"))
+ideol4 <- ideol %>%
+  mutate(prezterm = "t4") %>%
+  filter(Date >= as.Date("2003-1-1") & Date <= as.Date("2007-12-31"))
+ideol5 <- ideol %>%
+  mutate(prezterm = "t5") %>%
+  filter(Date >= as.Date("2008-1-1") & Date <= as.Date("2012-12-31"))
+ideol6 <- ideol %>%
+  mutate(prezterm = "t6") %>%
+  filter(Date >= as.Date("2013-1-1") & Date <= as.Date("2014-12-31"))
+
+ideol_terms <- bind_rows(ideol1, ideol2, ideol3, ideol4, ideol5, ideol6)
+rm(ideol1, ideol2, ideol3, ideol4, ideol5, ideol6)
+   
+ggplot(ideol_terms) +
+  geom_bar(aes(x = prezterm, fill = Newspaper), 
+           position = "fill", show.legend = TRUE) +
+  facet_grid(~Keyword) +
+  labs(title = "Ideological dimension usage over time", 
+       x = "Government administation", 
+       y = "Count of keywords") +
+  scale_fill_viridis_d() +
+  theme_minimal()
+  
+```
+
+```{r echo=TRUE}
+
+spati1 <- spati %>%
+  mutate(prezterm = "t1") %>%
+  filter(Date >= as.Date("1990-1-1") & Date <= as.Date("1992-12-31"))
+spati2 <- spati %>%
+  mutate(prezterm = "t2") %>%
+  filter(Date >= as.Date("1993-1-1") & Date <= as.Date("1997-12-31"))
+spati3 <- spati %>%
+  mutate(prezterm = "t3") %>%
+  filter(Date >= as.Date("1998-1-1") & Date <= as.Date("2002-12-31"))
+spati4 <- spati %>%
+  mutate(prezterm = "t4") %>%
+  filter(Date >= as.Date("2003-1-1") & Date <= as.Date("2007-12-31"))
+spati5 <- spati %>%
+  mutate(prezterm = "t5") %>%
+  filter(Date >= as.Date("2008-1-1") & Date <= as.Date("2012-12-31"))
+spati6 <- spati %>%
+  mutate(prezterm = "t6") %>%
+  filter(Date >= as.Date("2013-1-1") & Date <= as.Date("2014-12-31"))
+
+spati_terms <- bind_rows(spati1, spati2, spati3, spati4, spati5, spati6)
+rm(spati1, spati2, spati3, spati4, spati5, spati6)
+
+
+ggplot(spati_terms, aes(x = timestamp, fill = Newspaper)) +
+  geom_bar(aes(x = prezterm, fill = Newspaper), 
+           position = "fill", show.legend = TRUE) +
+  facet_grid(~Keyword) +
+  labs(title = "Spatial dimension usage over time", 
+       x = "Category", y = "Count of keywords")  +
+  scale_fill_viridis_d(option = "A") +
+  theme_minimal()
+```
+
+Prepare text scaling
+```{r message=FALSE, warning=FALSE}
+
+#corpus
+require(quanteda)
+spati_corpus <- corpus(spati_terms, text_field = "Body") 
+ideol_corpus <- corpus(ideol_terms, text_field = "Body")
+
+#keyness 
+spati_dfm <- dfm(spati_corpus,  
+                 groups = "Keyword",
+                 remove_punct = TRUE) %>%
+  dfm_select(min_nchar = 2)
+
+ideol_dfm <- dfm(ideol_corpus,
+                 groups = "Keyword",
+                 remove_punct = TRUE) %>%
+  dfm_select(min_nchar = 2)
+
+result_keyness_spati <- textstat_keyness(spati_dfm, target = "Right")
+result_keyness_ideol <- textstat_keyness(ideol_dfm, target = "Conservative")
+
+```
+
+Show keyness
+```{r message=FALSE, warning=FALSE}
+
+# plot1 <- textplot_keyness(result_keyness_spati, n = 10)
+# plot2 <- textplot_keyness(result_keyness_ideol, n = 10)
+# gridExtra::grid.arrange(plot1, plot2, ncol=2)
+
+# pdf.options(family = "Korea1deb")
+# use this if not using cairo_pdf device
+
+textplot_keyness(result_keyness_spati, n = 10, color = c("black", "grey")) +
+  xlim(-3500, 1200) +
+  annotate("text", x = -500, y = 20, label = "Japan", hjust = 1) + 
+  annotate("text", x = -500, y = 19, label = "of Japan", hjust = 1) + 
+  annotate("text", x = -500, y = 18, label = "Abe", hjust = 1) + 
+  annotate("text", x = -500, y = 17, label = "right-wing", hjust = 1) + 
+  annotate("text", x = -500, y = 16, label = "LDP", hjust = 1) + 
+  annotate("text", x = -500, y = 15, label = "Japan is", hjust = 1) + 
+  annotate("text", x = -500, y = 14, label = "Dokdo Island", hjust = 1) + 
+  annotate("text", x = -500, y = 13, label = "Koizumi", hjust = 1) + 
+  annotate("text", x = -500, y = 12, label = "Yasukuni", hjust = 1) + 
+  annotate("text", x = -500, y = 11, label = "comfort women", hjust = 1) + 
+  annotate("text", x = -500, y = 10, label = "Korea-USA", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 9, label = "DLP", hjust = 1, color = "grey50")  + 
+  annotate("text", x = -500, y = 8, label = "Bongunsa", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 7, label = "Beef", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 6, label = "Korean Teachers and Education Workers Union", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 5, label = "South Korean Federation of University Students Councils", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 4, label = "Kyohaksa", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 3, label = "mad cow disease", hjust = 1, color = "grey50")+ 
+  annotate("text", x = -500, y = 2, label = "National Intelligence Service", hjust = 1, color = "grey50") + 
+  annotate("text", x = -500, y = 1, label = "left-wing", hjust = 1, color = "grey50") +
+  theme(text=element_text(family="NanumGothic"))
+
+# use cairo_pdf device when plotting
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+textplot_keyness(result_keyness_ideol, n = 10, color = c("black", "grey")) +
+  xlim(-1100, 1100) +
+  annotate("text", x = 700, y = 20, label = "Japan", hjust = 0) + 
+  annotate("text", x = 700, y = 19, label = "of Japan", hjust = 0) + 
+  annotate("text", x = 700, y = 18, label = "Abe", hjust = 0) + 
+  annotate("text", x = 700, y = 17, label = "Blue House", hjust = 0) + 
+  annotate("text", x = 700, y = 16, label = "Koizumi", hjust = 0) + 
+  annotate("text", x = 700, y = 15, label = "LDP", hjust = 0) + 
+  annotate("text", x = 700, y = 14, label = "New Korea Party", hjust = 0) + 
+  annotate("text", x = 700, y = 13, label = "of the PM", hjust = 0) + 
+  annotate("text", x = 700, y = 12, label = "[morpheme]", hjust = 0) + 
+  annotate("text", x = 700, y = 11, label = "the PM", hjust = 0) + 
+  annotate("text", x = 700, y = 10, label = "party", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 9, label = "electoral district", hjust = 0, color = "grey50")  + 
+  annotate("text", x = 700, y = 8, label = "opposition party", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 7, label = "DLP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 6, label = "proportional rep.", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 5, label = "NPP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 4, label = "Lee Suk-gi", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 3, label = "progressivist", hjust = 0, color = "grey50")+ 
+  annotate("text", x = 700, y = 2, label = "UPP", hjust = 0, color = "grey50") + 
+  annotate("text", x = 700, y = 1, label = "progressive", hjust = 0, color = "grey50") +
+  theme(text=element_text(family="NanumGothic")) 
+
+```
+
+
+
+Trends of all keywords
 ```{r}
 # pdf("1_trend_news.pdf", width=7, height=4)
 data %>%
@@ -96,3 +364,4 @@ data %>%
 # dev.off()
 
 ```
+

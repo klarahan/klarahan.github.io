@@ -218,7 +218,7 @@ news_words <- left_join(news_words, total_words)
 ```
 
 
-Show term freqency ranks.
+Show term frequency ranks.
 ```{r}
 freq_by_rank <- news_words %>% 
   group_by(Newspaper, admin) %>% 
@@ -228,7 +228,7 @@ freq_by_rank <- news_words %>%
 freq_by_rank
 ```
 
-Show term freqency ranks for the most negative administrations.
+Show term frequency ranks for the most negative administrations.
 ```{r}
 news_words %>% 
   filter(Newspaper == "Hankyoreh") %>% 

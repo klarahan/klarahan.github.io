@@ -211,16 +211,30 @@ print(toks[2], max_ndoc = 1, max_ntok = -1)
 #               "", Body, perl = TRUE)) %>%
 #   stringr::str_squish()
 
-data_toks_wel <- toks %>% dfm() %>% dfm_subset(Keyword = "welfare")
-data_toks_uni <- toks %>% filter(Keyword == "unification")
-data_toks_econ <- toks %>% dfm() %>% dfm_subset(Keyword == "econdem") %>% conv
-data_toks_ideo <- toks %>% tokens_subset(Keyword %in% c("progressive", "conservative", "left", "right"))
-data_toks_dem <- toks %>% filter(Keyword == "democracy")
+# data_toks_wel <- toks %>% tokens_subset(Keyword = "welfare")
+# data_toks_uni <- toks %>% tokens_subset(Keyword == "unification")
+# data_toks_econ <- toks %>% tokens_subset(Keyword == "econdem") 
+# data_toks_ideo <- toks %>% tokens_subset(Keyword %in% c("progressive", "conservative", "left", "right"))
+# data_toks_dem <- toks %>% tokens_subset(Keyword == "democracy")
+# 
+# saveRDS(toks, "data_toks.RDS")
+# saveRDS(data_toks_wel, "data_toks_wel.RDS")
+# saveRDS(data_toks_uni, "data_toks_uni.RDS")
+# saveRDS(data_toks_econ, "data_toks_econ.RDS")
+# saveRDS(data_toks_ideo, "data_toks_ideo.RDS")
+# saveRDS(data_toks_dem, "data_toks_dem.RDS")
+# 
 
-saveRDS(data_toks, "data_toks.RDS")
-saveRDS(data_toks_wel, "data_toks_wel.RDS")
-saveRDS(data_toks_uni, "data_toks_uni.RDS")
-saveRDS(data_toks_econ, "data_toks_econ.RDS")
-saveRDS(data_toks_ideo, "data_toks_ideo.RDS")
-saveRDS(data_toks_dem, "data_toks_dem.RDS")
+set.seed(10)
+data_dfm_wel <- data_toks_wel %>% dfm() %>% dfm_sample(100000)
+data_dfm_uni <- data_toks_uni %>% dfm()
+data_dfm_econ <- data_toks_econ %>% dfm()
+data_dfm_ideo <- data_toks_ideo %>% dfm()
+data_dfm_dem <- data_toks_dem %>% dfm()
+
+saveRDS(data_dfm_wel, "data_dfm_wel.RDS")
+saveRDS(data_dfm_uni, "data_dfm_uni.RDS")
+saveRDS(data_dfm_econ, "data_dfm_econ.RDS")
+saveRDS(data_dfm_ideo, "data_dfm_ideo.RDS")
+saveRDS(data_dfm_dem, "data_dfm_dem.RDS")
 
