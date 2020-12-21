@@ -1,6 +1,6 @@
 
 setwd("C:/Users/hanou/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/data")
-Sys.setlocale(locale = "Korean")
+Sys.setlocale("LC_ALL", locale = "korean")
 
 library(lubridate)
 library(dplyr)
@@ -8,7 +8,9 @@ library(tidytext)
 library(readxl)
 library(readr)
 library(quanteda)
-library(KoNLP) 
+library(RcppMeCab)
+library(RmecabKo)
+library(stringr)
 
 # 1a. Keywords: welfare, unification, economic democratization ---------------
 # read in data by newspaper and theme
@@ -99,7 +101,7 @@ hank_left <- read_tsv("hankook_left.txt", locale = locale(encoding = "UTF-8")) %
 hank_right <- read_tsv("hankook_right.txt", locale = locale(encoding = "UTF-8")) %>%
   mutate(Newspaper = "Hankook", Keyword = "right")
 
-# 2. Dates and periods ---------------------------------------------------------------------
+# 2.  Dates and periods ---------------------------------------------------------------------
 # add dates, presidential terms, and presidential parties
 data <- bind_rows(data_chos, data_hani, data_hank,
                   data_dem,
@@ -165,76 +167,236 @@ data_econ <- readRDS("data_econ.RDS")
 data_ideo <- readRDS("data_ideo.RDS")
 data_dem <- readRDS("data_dem.RDS")
 
-# 3. Pre-processing ---------------------------------------------------------------------
-# create corpus with the library "quanteda"
-corpus <- corpus(data, text_field = "Body")
+# 3a. Pre-processing ---------------------------------------------------------------------
+data <- readRDS("data.RDS")
+Sys.setlocale("LC_ALL", locale = "korean")
+setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
 
-# tokenize corpus and apply pre-processing
-toks <- corpus %>% tokens(remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE) %>% #general cleaning
-  tokens_remove(pattern = stopwords("ko", source = "marimo"), padding = TRUE, min_nchar = 2) %>% #stopwords, min 2 syllables
-  tokens_select(pattern = "^\\p{script=Hangul}+$", valuetype = 'regex', padding = TRUE)          #keep only Hangul
+library(dplyr, warn.conflicts = FALSE)
+# Suppress summarise info
+options(dplyr.summarise.inform = FALSE)
 
-print(toks[2], max_ndoc = 1, max_ntok = -1)
+#Plan A: the below method takes an exponential amount of time
+# data_kor <- data %>%
+#   mutate(cleaned = gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE)) %>%
+#   unnest_tokens(word, cleaned, token = "words") %>%
+#   mutate(word = str_squish(word))
+# 
+# data_kor_noun <- data_kor %>%
+#   mutate(word = iconv(word, from = "utf-8", "cp949")) %>%
+#   unnest_tokens(noun, word, token = nouns) %>%
+#   filter(nchar(noun) > 1)             #filter words shorter than 1 syllable
+# data_kor_noun$noun
+# 
+# saveRDS(data_kor_noun, "data_kor_noun.RDS")
 
-toks <- toks %>% 
-  tokens_select(c("종이신문보기", "[^.]*(기자|수석논설위원|특파원).*[^.]$",
-  "한국아이닷컴 무단전재 및 재배포 금지|인터넷한국일보 무단 전재 및 재배포 금지|
-  한국아이닷컴|한국온라인신문협회|디지털뉴스이용규칙에 따른 저작권을 행사합니다\r|지면PDF보기"),
-  "remove",  valuetype = 'regex', padding = TRUE) 
+#noun extracting function
+# extract_nouns <- function(x, keyword = keyword) {
+#   data_econ <- x %>%
+#     filter(Keyword == keyword) %>% 
+#     slice_sample(n = 1500) %>% 
+#     mutate(cleaned = gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE)) %>%
+#     unnest_tokens(word, cleaned, token = "words") %>%
+#     mutate(word = str_squish(word)) %>% 
+#     mutate(word = iconv(word, from = "utf-8", "cp949")) %>%
+#     unnest_tokens(noun, word, token = nouns) %>% 
+#     filter(nchar(noun) > 1) %>% 
+#     group_by(Date, Title, Body, Newspaper, Keyword, Government, Prezparty) %>% 
+#     summarize(text = str_c(noun, collapse = " ")) %>%
+#     ungroup() 
+# }
+# y <- extract_nouns(data, "econdem")
 
-print(toks[2], max_ndoc = 1, max_ntok = -1)
+#Plan B: the below method is fast
+extract_nouns2 <- function(x) {
+  data_econ <- x %>%
+    mutate(cleaned = gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE)) %>%
+    unnest_tokens(word, cleaned, token = "words") %>%
+    mutate(word = str_squish(word)) %>% 
+    mutate(word = iconv(word, from = "utf-8", "cp949")) %>%
+    unnest_tokens(noun, word, token = nouns) %>% 
+    filter(nchar(noun) > 1) %>% 
+    group_by(Date, Title, Body, Newspaper, Keyword, Government, Prezparty) %>% 
+    summarize(text = str_c(noun, collapse = " ")) %>%
+    ungroup() 
+}
+
+#1. econdem
+start_time <- Sys.time()
+
+y <- data %>%
+  filter(Keyword == "econdem") %>% 
+  split(.$iidx) %>%
+  purrr::map_dfr(extract_nouns2) 
+
+end_time <- Sys.time()
+end_time - start_time
+
+saveRDS(y, "data/data_econ_nouns")
+
+#2. democracy
+start_time <- Sys.time()
+
+y <- data %>%
+  filter(Keyword == "democracy") %>% 
+  split(.$iidx) %>%
+  purrr::map_dfr(extract_nouns2) 
+
+end_time <- Sys.time()
+end_time - start_time
+
+saveRDS(y, "data/data_dem_nouns")
+
+#3. ideology
+
+start_time <- Sys.time()
+
+y <- data %>%
+  filter(Keyword == "conservative" | Keyword == "right" | Keyword == "progressive" | Keyword == "left") %>% 
+  split(.$iidx) %>%
+  purrr::map_dfr(extract_nouns2) 
+
+end_time <- Sys.time()
+end_time - start_time
+
+saveRDS(y, "data/data_ideo_nouns")
+
+#4. uni
+
+start_time <- Sys.time()
+
+y <- data %>%
+  filter(Keyword == "unification") %>% 
+  split(.$iidx) %>%
+  purrr::map_dfr(extract_nouns2) 
+
+end_time <- Sys.time()
+end_time - start_time
+
+saveRDS(y, "data/data_uni_nouns")
+
+#5. welfare
+
+start_time <- Sys.time()
+
+y <- data %>%
+  filter(Keyword == "welfare") %>% 
+  split(.$iidx) %>%
+  purrr::map_dfr(extract_nouns2) 
+
+end_time <- Sys.time()
+end_time - start_time
+
+saveRDS(y, "data/data_wel_nouns") 
+
+
+#make dfm of everything
+dfm_econ <- read_rds("data/data_econ_nouns") %>% 
+  corpus(text_field = "text") %>%  
+  dfm()
+saveRDS(dfm_econ, "data/dfm_econ")
+
+dfm_dem <- read_rds("data/data_dem_nouns") %>% 
+  corpus(text_field = "text") %>%  
+  dfm()
+saveRDS(dfm_dem, "data/dfm_dem")
+
+dfm_ideo <- read_rds("data/data_ideo_nouns") %>% 
+  corpus(text_field = "text") %>%  
+  dfm()
+saveRDS(dfm_ideo, "data/dfm_ideo")
+
+dfm_uni <- read_rds("data/data_uni_nouns") %>% 
+  corpus(text_field = "text") %>%  
+  dfm() %>% 
+  dfm_sample(size = 60000, margin = "documents")
+saveRDS(dfm_uni, "data/dfm_uni")
+
+dfm_wel <- read_rds("data/data_wel_nouns") %>% 
+  corpus(text_field = "text") %>%  
+  dfm()
+saveRDS(dfm_wel, "data/dfm_wel")
   
-# # below: the much slower version of cleaning the text
-# data_chos <- data %>% 
-#   filter(Newspaper == "Chosun") %>% 
-#   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE),           #remove html 
-#          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),   #keep only Hangul
-#          gsub("....기자|....특파원", " ", Body, perl = TRUE),    #remove author name, title
-#          gsub("종이신문보기", " ", Body, perl = TRUE)) %>%       #remove link descriptions
-#   stringr::str_squish()
-# 
-# data_hani <- data %>% 
-#   filter(Newspaper == "Hankyoreh") %>%  
-#   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
-#          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),  
-#          gsub("....기자|....특파원", " ", Body, perl = TRUE)) %>%
-#   stringr::str_squish()
-# 
-# data_hank <- data %>% 
-#   filter(Newspaper == "Hankook") %>%  
-#   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
-#          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),  
-#          gsub("....기자|....특파원", " ", Body, perl = TRUE), 
-#          gsub("종이신문보기", " ", Body, perl = TRUE),
-#          gsub("한국아이닷컴 무단전재 및 재배포 금지|인터넷한국일보 무단 전재 및 재배포 금지|
-#          한국아이닷컴|한국온라인신문협회|디지털뉴스이용규칙에 따른 저작권을 행사합니다\r|지면PDF보기",
-#               "", Body, perl = TRUE)) %>%
-#   stringr::str_squish()
+  
+# 3b. Quanteda approach -------------------------------------------------------
 
-# data_toks_wel <- toks %>% tokens_subset(Keyword = "welfare")
+# create corpus with the library "quanteda"
+# corpus <- corpus(data, text_field = "Body")
+
+# # tokenize corpus and apply pre-processing
+# toks_ <- corpus %>% tokens(remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE) %>% #general cleaning
+#   tokens_remove(pattern = stopwords("ko", source = "marimo"), min_nchar = 2) %>% #stopwords, min 2 syllables
+#   tokens_keep(pattern = "^\\p{script=Hangul}+$", valuetype = 'regex') %>%          #keep only Hangul
+#   tokens_remove(c("종이신문보기", "(기자|수석논설위원|특파원)", "한국아이닷컴 무단전재 및 재배포 금지", 
+#                   "인터넷한국일보 무단 전재 및 재배포 금지", "지면PDF보기", "관련기사",   
+#                   "한국아이닷컴|한국온라인신문협회|디지털뉴스이용규칙에 따른 저작권을 행사합니다"),
+#                 valuetype = "glob")
+# # print(toks[2], max_ndoc = 1, max_ntok = -1)
+# # 
+# # toks <- toks_ %>%
+# #   tokens_remove(c("종이신문보기", "(기자|수석논설위원|특파원)", "한국아이닷컴 무단전재 및 재배포 금지", 
+# #                   "인터넷한국일보 무단 전재 및 재배포 금지", "지면PDF보기", "관련기사",   
+# #                   "한국아이닷컴|한국온라인신문협회|디지털뉴스이용규칙에 따른 저작권을 행사합니다",
+# #                   "있는", "대한", "말했다", "이라고", "기자", "그래픽", "본지", 
+# #                   "것으로", "그러나", "그는", "것은", "위한", "하는",
+# #                   "것이", "통해", "등을", "이를", "없는", "나는"),
+# #   valuetype = "fixed")  
+# # 
+# print(toks[2], max_ndoc = 1, max_ntok = -1)
+# 
+# toks
+#   
+# # # below: the much slower version of cleaning the text
+# # data_chos <- data %>% 
+# #   filter(Newspaper == "Chosun") %>% 
+# #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE),           #remove html 
+# #          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),   #keep only Hangul
+# #          gsub("....기자|....특파원", " ", Body, perl = TRUE),    #remove author name, title
+# #          gsub("종이신문보기", " ", Body, perl = TRUE)) %>%       #remove link descriptions
+# #   stringr::str_squish()
+# # 
+# # data_hani <- data %>% 
+# #   filter(Newspaper == "Hankyoreh") %>%  
+# #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
+# #          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),  
+# #          gsub("....기자|....특파원", " ", Body, perl = TRUE)) %>%
+# #   stringr::str_squish()
+# # 
+# # data_hank <- data %>% 
+# #   filter(Newspaper == "Hankook") %>%  
+# #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
+# #          gsub("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]", " ", Body, perl = TRUE),  
+# #          gsub("....기자|....특파원", " ", Body, perl = TRUE), 
+# #          gsub("종이신문보기", " ", Body, perl = TRUE),
+# #          gsub("한국아이닷컴 무단전재 및 재배포 금지|인터넷한국일보 무단 전재 및 재배포 금지|
+# #          한국아이닷컴|한국온라인신문협회|디지털뉴스이용규칙에 따른 저작권을 행사합니다\r|지면PDF보기",
+# #               "", Body, perl = TRUE)) %>%
+# #   stringr::str_squish()
+# 
+# setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
+# 
+# data_toks_wel <- toks %>% tokens_subset(Keyword == "welfare")
 # data_toks_uni <- toks %>% tokens_subset(Keyword == "unification")
-# data_toks_econ <- toks %>% tokens_subset(Keyword == "econdem") 
+# data_toks_econ <- toks %>% tokens_subset(Keyword == "econdem")
 # data_toks_ideo <- toks %>% tokens_subset(Keyword %in% c("progressive", "conservative", "left", "right"))
 # data_toks_dem <- toks %>% tokens_subset(Keyword == "democracy")
 # 
 # saveRDS(toks, "data_toks.RDS")
-# saveRDS(data_toks_wel, "data_toks_wel.RDS")
-# saveRDS(data_toks_uni, "data_toks_uni.RDS")
-# saveRDS(data_toks_econ, "data_toks_econ.RDS")
-# saveRDS(data_toks_ideo, "data_toks_ideo.RDS")
-# saveRDS(data_toks_dem, "data_toks_dem.RDS")
+# saveRDS(data_toks_wel, "data/data_toks_wel.RDS")
+# saveRDS(data_toks_uni, "data/data_toks_uni.RDS")
+# saveRDS(data_toks_econ, "data/data_toks_econ.RDS")
+# saveRDS(data_toks_ideo, "data/data_toks_ideo.RDS")
+# saveRDS(data_toks_dem, "data/data_toks_dem.RDS")
 # 
-
-set.seed(10)
-data_dfm_wel <- data_toks_wel %>% dfm() %>% dfm_sample(100000)
-data_dfm_uni <- data_toks_uni %>% dfm()
-data_dfm_econ <- data_toks_econ %>% dfm()
-data_dfm_ideo <- data_toks_ideo %>% dfm()
-data_dfm_dem <- data_toks_dem %>% dfm()
-
-saveRDS(data_dfm_wel, "data/data_dfm_wel.RDS")
-saveRDS(data_dfm_uni, "data/data_dfm_uni.RDS")
-saveRDS(data_dfm_econ, "data/data_dfm_econ.RDS")
-saveRDS(data_dfm_ideo, "data/data_dfm_ideo.RDS")
-saveRDS(data_dfm_dem, "data/data_dfm_dem.RDS")
+# data_dfm_wel <- data_toks_wel %>% dfm() 
+# data_dfm_uni <- data_toks_uni %>% dfm()
+# data_dfm_econ <- data_toks_econ %>% dfm()
+# data_dfm_ideo <- data_toks_ideo %>% dfm()
+# data_dfm_dem <- data_toks_dem %>% dfm()
+# 
+# saveRDS(data_dfm_wel, "data/data_dfm_wel.RDS")
+# saveRDS(data_dfm_uni, "data/data_dfm_uni.RDS")
+# saveRDS(data_dfm_econ, "data/data_dfm_econ.RDS")
+# saveRDS(data_dfm_ideo, "data/data_dfm_ideo.RDS")
+# saveRDS(data_dfm_dem, "data/data_dfm_dem.RDS")
 
