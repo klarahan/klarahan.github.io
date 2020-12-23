@@ -20,33 +20,33 @@ library(stringr)
 
 path <- ("C:/Users/hanou/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/data/all_issues.xls")
 
-chos_wel <- read_xls(path, sheet = "Chosun_ë³µì§€", col_types = "text") %>%  
+chos_wel <- read_xls(path, sheet = "Chosun_ë³µì?€", col_types = "text") %>%  
   mutate(Newspaper = "Chosun", Keyword = "welfare") 
-chos_uni <- read_xls(path, sheet = "Chosun_í†µì¼", col_types = "text") %>%  
+chos_uni <- read_xls(path, sheet = "Chosun_?†µ?¼", col_types = "text") %>%  
   mutate(Newspaper = "Chosun", Keyword = "unification") 
-chos_eco <- read_xls(path, sheet = "Chosun_ê²½ì œë¯¼ì£¼í™”", col_types = "text") %>%  
+chos_eco <- read_xls(path, sheet = "Chosun_ê²½ì œë¯¼ì£¼?™”", col_types = "text") %>%  
   mutate(Newspaper = "Chosun", Keyword = "econdem") 
 
 data_chos <- rbind(chos_wel, chos_uni, chos_eco) %>% 
   mutate(iidx = row_number(),
          Date = as.double(Date))
 
-hani_wel <- read_xls(path, sheet = "Hani_ë³µì§€", col_types = "text") %>%  
+hani_wel <- read_xls(path, sheet = "Hani_ë³µì?€", col_types = "text") %>%  
   mutate(Newspaper = "Hankyoreh", Keyword = "welfare") 
-hani_uni <- read_xls(path, sheet = "Hani_í†µì¼", col_types = "text") %>%  
+hani_uni <- read_xls(path, sheet = "Hani_?†µ?¼", col_types = "text") %>%  
   mutate(Newspaper = "Hankyoreh", Keyword = "unification") 
-hani_eco <- read_xls(path, sheet = "Hani_ê²½ì œë¯¼ì£¼í™”", col_types = "text") %>%  
+hani_eco <- read_xls(path, sheet = "Hani_ê²½ì œë¯¼ì£¼?™”", col_types = "text") %>%  
   mutate(Newspaper = "Hankyoreh", Keyword = "econdem") 
 
 data_hani <- rbind(hani_wel, hani_uni, hani_eco) %>% 
   mutate(iidx = row_number(),
          Date = as.double(Date))
 
-hank_wel <- read_xls(path, sheet = "Hangook_ë³µì§€", col_types = "text") %>%  
+hank_wel <- read_xls(path, sheet = "Hangook_ë³µì?€", col_types = "text") %>%  
   mutate(Newspaper = "Hankook", Keyword = "welfare") 
-hank_uni <- read_xls(path, sheet = "Hangook_í†µì¼", col_types = "text") %>%  
+hank_uni <- read_xls(path, sheet = "Hangook_?†µ?¼", col_types = "text") %>%  
   mutate(Newspaper = "Hankook", Keyword = "unification") 
-hank_eco <- read_xls(path, sheet = "Hangook_ê²½ì œë¯¼ì£¼í™”", col_types = "text") %>%  
+hank_eco <- read_xls(path, sheet = "Hangook_ê²½ì œë¯¼ì£¼?™”", col_types = "text") %>%  
   mutate(Newspaper = "Hankook", Keyword = "econdem") 
 
 data_hank <- rbind(hank_wel, hank_uni, hank_eco) %>% 
@@ -178,7 +178,7 @@ options(dplyr.summarise.inform = FALSE)
 
 #Plan A: the below method takes an exponential amount of time
 # data_kor <- data %>%
-#   mutate(cleaned = gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE)) %>%
+#   mutate(cleaned = gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE)) %>%
 #   unnest_tokens(word, cleaned, token = "words") %>%
 #   mutate(word = str_squish(word))
 # 
@@ -195,7 +195,7 @@ options(dplyr.summarise.inform = FALSE)
 #   data_econ <- x %>%
 #     filter(Keyword == keyword) %>% 
 #     slice_sample(n = 1500) %>% 
-#     mutate(cleaned = gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE)) %>%
+#     mutate(cleaned = gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE)) %>%
 #     unnest_tokens(word, cleaned, token = "words") %>%
 #     mutate(word = str_squish(word)) %>% 
 #     mutate(word = iconv(word, from = "utf-8", "cp949")) %>%
@@ -210,7 +210,7 @@ options(dplyr.summarise.inform = FALSE)
 #Plan B: the below method is fast
 extract_nouns2 <- function(x) {
   data_econ <- x %>%
-    mutate(cleaned = gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE)) %>%
+    mutate(cleaned = gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE)) %>%
     unnest_tokens(word, cleaned, token = "words") %>%
     mutate(word = str_squish(word)) %>% 
     mutate(word = iconv(word, from = "utf-8", "cp949")) %>%
@@ -291,31 +291,31 @@ saveRDS(y, "data/data_wel_nouns")
 
 
 #make dfm of everything
-dfm_econ <- read_rds("data/data_econ_nouns") %>% 
+toks_econ <- readRDS("data/data_econ_nouns") %>% 
   corpus(text_field = "text") %>%  
-  dfm()
-saveRDS(dfm_econ, "data/dfm_econ")
+  tokens()
+saveRDS(toks_econ, "data/toks_econ")
 
-dfm_dem <- read_rds("data/data_dem_nouns") %>% 
+toks_dem <- readRDS("data/data_dem_nouns") %>% 
   corpus(text_field = "text") %>%  
-  dfm()
-saveRDS(dfm_dem, "data/dfm_dem")
+  tokens()
+saveRDS(toks_dem, "data/toks_dem")
 
-dfm_ideo <- read_rds("data/data_ideo_nouns") %>% 
+toks_ideo <- readRDS("data/data_ideo_nouns") %>% 
   corpus(text_field = "text") %>%  
-  dfm()
-saveRDS(dfm_ideo, "data/dfm_ideo")
+  tokens()
+saveRDS(toks_ideo, "data/toks_ideo")
 
-dfm_uni <- read_rds("data/data_uni_nouns") %>% 
+toks_uni <- readRDS("data/data_uni_nouns") %>% 
   corpus(text_field = "text") %>%  
-  dfm() %>% 
-  dfm_sample(size = 60000, margin = "documents")
-saveRDS(dfm_uni, "data/dfm_uni")
+  tokens() %>% 
+  tokens_sample(size = 59000)
+saveRDS(toks_uni, "data/toks_uni")
 
-dfm_wel <- read_rds("data/data_wel_nouns") %>% 
+toks_wel <- readRDS("data/data_wel_nouns") %>% 
   corpus(text_field = "text") %>%  
-  dfm()
-saveRDS(dfm_wel, "data/dfm_wel")
+  tokens()
+saveRDS(toks_wel, "data/toks_wel")
   
   
 # 3b. Quanteda approach -------------------------------------------------------
@@ -327,19 +327,19 @@ saveRDS(dfm_wel, "data/dfm_wel")
 # toks_ <- corpus %>% tokens(remove_punct = TRUE, remove_numbers = TRUE, remove_symbols = TRUE) %>% #general cleaning
 #   tokens_remove(pattern = stopwords("ko", source = "marimo"), min_nchar = 2) %>% #stopwords, min 2 syllables
 #   tokens_keep(pattern = "^\\p{script=Hangul}+$", valuetype = 'regex') %>%          #keep only Hangul
-#   tokens_remove(c("ì¢…ì´ì‹ ë¬¸ë³´ê¸°", "(ê¸°ì|ìˆ˜ì„ë…¼ì„¤ìœ„ì›|íŠ¹íŒŒì›)", "í•œêµ­ì•„ì´ë‹·ì»´ ë¬´ë‹¨ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€", 
-#                   "ì¸í„°ë„·í•œêµ­ì¼ë³´ ë¬´ë‹¨ ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€", "ì§€ë©´PDFë³´ê¸°", "ê´€ë ¨ê¸°ì‚¬",   
-#                   "í•œêµ­ì•„ì´ë‹·ì»´|í•œêµ­ì˜¨ë¼ì¸ì‹ ë¬¸í˜‘íšŒ|ë””ì§€í„¸ë‰´ìŠ¤ì´ìš©ê·œì¹™ì— ë”°ë¥¸ ì €ì‘ê¶Œì„ í–‰ì‚¬í•©ë‹ˆë‹¤"),
+#   tokens_remove(c("ì¢…ì´?‹ ë¬¸ë³´ê¸?", "(ê¸°ì|?ˆ˜?„?…¼?„¤?œ„?›|?Š¹?ŒŒ?›)", "?•œêµ??•„?´?‹·ì»? ë¬´ë‹¨? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€", 
+#                   "?¸?„°?„·?•œêµ??¼ë³? ë¬´ë‹¨ ? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€", "ì§€ë©´PDFë³´ê¸°", "ê´€? ¨ê¸°ì‚¬",   
+#                   "?•œêµ??•„?´?‹·ì»?|?•œêµ??˜¨?¼?¸?‹ ë¬¸í˜‘?šŒ|?””ì§€?„¸?‰´?Š¤?´?š©ê·œì¹™?— ?”°ë¥? ??€?‘ê¶Œì„ ?–‰?‚¬?•©?‹ˆ?‹¤"),
 #                 valuetype = "glob")
 # # print(toks[2], max_ndoc = 1, max_ntok = -1)
 # # 
 # # toks <- toks_ %>%
-# #   tokens_remove(c("ì¢…ì´ì‹ ë¬¸ë³´ê¸°", "(ê¸°ì|ìˆ˜ì„ë…¼ì„¤ìœ„ì›|íŠ¹íŒŒì›)", "í•œêµ­ì•„ì´ë‹·ì»´ ë¬´ë‹¨ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€", 
-# #                   "ì¸í„°ë„·í•œêµ­ì¼ë³´ ë¬´ë‹¨ ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€", "ì§€ë©´PDFë³´ê¸°", "ê´€ë ¨ê¸°ì‚¬",   
-# #                   "í•œêµ­ì•„ì´ë‹·ì»´|í•œêµ­ì˜¨ë¼ì¸ì‹ ë¬¸í˜‘íšŒ|ë””ì§€í„¸ë‰´ìŠ¤ì´ìš©ê·œì¹™ì— ë”°ë¥¸ ì €ì‘ê¶Œì„ í–‰ì‚¬í•©ë‹ˆë‹¤",
-# #                   "ìˆëŠ”", "ëŒ€í•œ", "ë§í–ˆë‹¤", "ì´ë¼ê³ ", "ê¸°ì", "ê·¸ë˜í”½", "ë³¸ì§€", 
-# #                   "ê²ƒìœ¼ë¡œ", "ê·¸ëŸ¬ë‚˜", "ê·¸ëŠ”", "ê²ƒì€", "ìœ„í•œ", "í•˜ëŠ”",
-# #                   "ê²ƒì´", "í†µí•´", "ë“±ì„", "ì´ë¥¼", "ì—†ëŠ”", "ë‚˜ëŠ”"),
+# #   tokens_remove(c("ì¢…ì´?‹ ë¬¸ë³´ê¸?", "(ê¸°ì|?ˆ˜?„?…¼?„¤?œ„?›|?Š¹?ŒŒ?›)", "?•œêµ??•„?´?‹·ì»? ë¬´ë‹¨? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€", 
+# #                   "?¸?„°?„·?•œêµ??¼ë³? ë¬´ë‹¨ ? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€", "ì§€ë©´PDFë³´ê¸°", "ê´€? ¨ê¸°ì‚¬",   
+# #                   "?•œêµ??•„?´?‹·ì»?|?•œêµ??˜¨?¼?¸?‹ ë¬¸í˜‘?šŒ|?””ì§€?„¸?‰´?Š¤?´?š©ê·œì¹™?— ?”°ë¥? ??€?‘ê¶Œì„ ?–‰?‚¬?•©?‹ˆ?‹¤",
+# #                   "?ˆ?Š”", "??€?•œ", "ë§í–ˆ?‹¤", "?´?¼ê³?", "ê¸°ì", "ê·¸ë˜?”½", "ë³¸ì?€", 
+# #                   "ê²ƒìœ¼ë¡?", "ê·¸ëŸ¬?‚˜", "ê·¸ëŠ”", "ê²ƒì?€", "?œ„?•œ", "?•˜?Š”",
+# #                   "ê²ƒì´", "?†µ?•´", "?“±?„", "?´ë¥?", "?—†?Š”", "?‚˜?Š”"),
 # #   valuetype = "fixed")  
 # # 
 # print(toks[2], max_ndoc = 1, max_ntok = -1)
@@ -350,26 +350,26 @@ saveRDS(dfm_wel, "data/dfm_wel")
 # # data_chos <- data %>% 
 # #   filter(Newspaper == "Chosun") %>% 
 # #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE),           #remove html 
-# #          gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE),   #keep only Hangul
-# #          gsub("....ê¸°ì|....íŠ¹íŒŒì›", " ", Body, perl = TRUE),    #remove author name, title
-# #          gsub("ì¢…ì´ì‹ ë¬¸ë³´ê¸°", " ", Body, perl = TRUE)) %>%       #remove link descriptions
+# #          gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE),   #keep only Hangul
+# #          gsub("....ê¸°ì|....?Š¹?ŒŒ?›", " ", Body, perl = TRUE),    #remove author name, title
+# #          gsub("ì¢…ì´?‹ ë¬¸ë³´ê¸?", " ", Body, perl = TRUE)) %>%       #remove link descriptions
 # #   stringr::str_squish()
 # # 
 # # data_hani <- data %>% 
 # #   filter(Newspaper == "Hankyoreh") %>%  
 # #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
-# #          gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE),  
-# #          gsub("....ê¸°ì|....íŠ¹íŒŒì›", " ", Body, perl = TRUE)) %>%
+# #          gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE),  
+# #          gsub("....ê¸°ì|....?Š¹?ŒŒ?›", " ", Body, perl = TRUE)) %>%
 # #   stringr::str_squish()
 # # 
 # # data_hank <- data %>% 
 # #   filter(Newspaper == "Hankook") %>%  
 # #   mutate(Body = gsub("<.*?>", " ", Body, perl = TRUE), 
-# #          gsub("[^ã„±-ã…|ã…-ã…£|ê°€-í£]", " ", Body, perl = TRUE),  
-# #          gsub("....ê¸°ì|....íŠ¹íŒŒì›", " ", Body, perl = TRUE), 
-# #          gsub("ì¢…ì´ì‹ ë¬¸ë³´ê¸°", " ", Body, perl = TRUE),
-# #          gsub("í•œêµ­ì•„ì´ë‹·ì»´ ë¬´ë‹¨ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€|ì¸í„°ë„·í•œêµ­ì¼ë³´ ë¬´ë‹¨ ì „ì¬ ë° ì¬ë°°í¬ ê¸ˆì§€|
-# #          í•œêµ­ì•„ì´ë‹·ì»´|í•œêµ­ì˜¨ë¼ì¸ì‹ ë¬¸í˜‘íšŒ|ë””ì§€í„¸ë‰´ìŠ¤ì´ìš©ê·œì¹™ì— ë”°ë¥¸ ì €ì‘ê¶Œì„ í–‰ì‚¬í•©ë‹ˆë‹¤\r|ì§€ë©´PDFë³´ê¸°",
+# #          gsub("[^?„±-?…|?…-?…£|ê°€-?£]", " ", Body, perl = TRUE),  
+# #          gsub("....ê¸°ì|....?Š¹?ŒŒ?›", " ", Body, perl = TRUE), 
+# #          gsub("ì¢…ì´?‹ ë¬¸ë³´ê¸?", " ", Body, perl = TRUE),
+# #          gsub("?•œêµ??•„?´?‹·ì»? ë¬´ë‹¨? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€|?¸?„°?„·?•œêµ??¼ë³? ë¬´ë‹¨ ? „?¬ ë°? ?¬ë°°í¬ ê¸ˆì?€|
+# #          ?•œêµ??•„?´?‹·ì»?|?•œêµ??˜¨?¼?¸?‹ ë¬¸í˜‘?šŒ|?””ì§€?„¸?‰´?Š¤?´?š©ê·œì¹™?— ?”°ë¥? ??€?‘ê¶Œì„ ?–‰?‚¬?•©?‹ˆ?‹¤\r|ì§€ë©´PDFë³´ê¸°",
 # #               "", Body, perl = TRUE)) %>%
 # #   stringr::str_squish()
 # 
