@@ -25,68 +25,6 @@ Load the data.
 data_dem <- readRDS("data/data_dem_nouns")
 ```
 
-# Overview
-Trend  
-```{r}
-x <- data_dem %>%
-  count(Newspaper, Government, Date, Prezparty) %>% 
-    mutate(Government = case_when(
-      Government == "1990-1993 Roh TW" ~ "1990-1993\nConservative\nRoh TW",
-      Government == "1993-1998 Kim YS" ~ "1993-1998\nConservative\nKim YS", 
-      Government == "1998-2003 Kim DJ" ~ "1998-2003\nLiberal\nKim DJ",
-      Government == "2003-2008 Roh MH" ~ "2003-2008\nLiberal\nRoh MH",
-      Government == "2008-2013 Lee MB" ~ "2008-2013\nConservative\nLee MB",
-      Government == "2013-2014 Park GH" ~ "2013-2014\nConservative\nPark GH")) %>%
-  ggplot(aes(Date, n, fill = Newspaper)) +
-  geom_smooth(colour="black") +
-  labs(x = "Year",
-       y = "Count of daily articles",
-       caption = "smoothed with generative additive models (GAM)") +
-  scale_fill_grey() +
-  theme_minimal() +
-  theme(legend.position = "none",
-      # strip.text.y.right = element_text(angle = 0),
-      axis.text.x = element_text(angle = 90, hjust = 1)) +
-  theme(axis.text.x=element_blank(),
-        axis.title.x=element_blank()) +
-  facet_grid(Newspaper~Government, scales = "free_x") 
-x
-ggsave("plots/2_dem_trend.jpg", width=8, height=4, dpi = 300)
-
-```
-
-Trend by presidential party position
-```{r}
-x <- data_dem %>%
-  mutate(Date = year(Date)) %>% 
-  count(Newspaper, Government, Date, Prezparty) %>% 
-  group_by(Newspaper) %>%
-  mutate(total_n = sum(n)) %>%
-  mutate(freq = n / total_n) %>% 
-  mutate(Government = case_when(
-      Government == "1990-1993 Roh TW" ~ "1990-1993\nConservative\nRoh TW",
-      Government == "1993-1998 Kim YS" ~ "1993-1998\nConservative\nKim YS", 
-      Government == "1998-2003 Kim DJ" ~ "1998-2003\nLiberal\nKim DJ",
-      Government == "2003-2008 Roh MH" ~ "2003-2008\nLiberal\nRoh MH",
-      Government == "2008-2013 Lee MB" ~ "2008-2013\nConservative\nLee MB",
-      Government == "2013-2014 Park GH" ~ "2013-2014\nConservative\nPark GH")) %>%
-  ggplot(aes(Prezparty, freq, fill = Prezparty)) +
-  geom_col() +
-  labs(x = "Party of president",
-       y = "Percentage of total articles") +
-  scale_fill_grey() +
-  theme_minimal() +
-  theme(legend.position = "none",
-      # strip.text.y.right = element_text(angle = 0),
-      axis.text.x = element_text(angle = 30, hjust = 1)) +
-  # theme(axis.text.x=element_blank(),
-  #       axis.title.x=element_blank()) +
-  facet_grid(.~Newspaper, scales = "free_x") 
-x
-ggsave("plots/2_dem_trend_pos.jpg", width=6, height=4, dpi = 300)
-
-```
-
 #Scaling
 Load the Korean sentiment lexicon.
 ```{r emo, echo=FALSE}
