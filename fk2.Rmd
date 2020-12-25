@@ -240,51 +240,6 @@ head(pred_sm_hankook)
 
 ```
 
-plot trend
-```{r}
-# jpeg("plots/2_dem_lss.jpg", res = 300, width = 8, height = 5, units = "in")
-
-plot(pred$date, pred$fit, col = rgb(0, 0, 0, 0.03), pch = 16, ylim = c(-0.5, 0.5), 
-     xlab = "Year", ylab = "Negative vs. positive")
-lines(pred_sm_chos$date, pred_sm_chos$fit, type = "l", col = "black")
-lines(pred_sm_chos$date, pred_sm_chos$fit + pred_sm_chos$se.fit * 2, type = "l", lty = 3)
-lines(pred_sm_chos$date, pred_sm_chos$fit - pred_sm_chos$se.fit * 2, type = "l", lty = 3)
-lines(pred_sm_hani$date, pred_sm_hani$fit, type = "l", col = "grey60")
-lines(pred_sm_hani$date, pred_sm_hani$fit + pred_sm_hani$se.fit * 2, type = "l", lty = 3, col = "grey")
-lines(pred_sm_hani$date, pred_sm_hani$fit - pred_sm_hani$se.fit * 2, type = "l", lty = 3, col = "grey")
-# lines(pred_sm_hankook$date, pred_sm_hankook$fit, type = "l")
-# lines(pred_sm_hankook$date, pred_sm_hankook$fit + pred_sm_hankook$se.fit * 2, type = "l", lty = 3)
-# lines(pred_sm_hankook$date, pred_sm_hankook$fit - pred_sm_hankook$se.fit * 2, type = "l", lty = 3)
-# abline(h = 0, v = as.Date("2012-12-19"), lty = c(1, 5))
-# abline(h = 0, v = as.Date("2008-06-05"), lty = c(1, 5))
-# abline(h = 0, v = as.Date("2000-06-13"), lty = c(1, 5))
-legend("topleft", legend=c("Chosun", "Hankyoreh"),
-       col=c("black", "grey50"), lty = 1, cex=0.8)
-
-abline(h = 0, v = as.Date("1993-02-25"), lty = c(1, 1))
-abline(h = 0, v = as.Date("1998-02-25"), lty = 1)
-abline(h = 0, v = as.Date("2003-02-25"), lty = 1)
-abline(h = 0, v = as.Date("2008-02-25"), lty = 1)
-abline(h = 0, v = as.Date("2013-02-25"), lty = 1)
-
-text(as.Date("1993-02-25"), -0.4, "Roh TW", adj = 0)
-text(as.Date("1998-02-25"), -0.4, "2", adj = 1)
-text(as.Date("2003-02-25"), -0.4, "1", adj = 1)
-text(as.Date("2008-02-25"), -0.4, "2", adj = 1)
-text(as.Date("2013-02-25"), -0.4, "1", adj = 1)
-
-# text(as.Date("2012-12-19"), -0.4, "3", adj = 1)
-# text(as.Date("2008-06-05"), -0.4, "2", adj = 1)
-# text(as.Date("2000-06-13"), -0.4, "1", adj = 1)
-# 
-# caption <- c("1. Inter-Korean Summit
-#              2. Beef Protests
-#              3. 2012 Presidential election") 
-# mtext(caption, side = 1, line = 4, cex = 0.8, adj = 1) 
-
-# dev.off()
-
-```
 plot trend ggplot2
 ```{r}
 bind_rows("Chosun" = pred_sm_chos, "Hankyoreh" = pred_sm_hani, .id = "Newspaper") %>% 
@@ -337,39 +292,26 @@ Prepare and check
 ```{r}
 Sys.setlocale(locale = "C")
 
-stopwords <- c("그래픽", "지난해", "한겨레", "기사", "기자", "본지", "측은", "작년", "신문", "종이", "우리", "지면", "보도", "생각", "이날", "간의")
+stopwords <- c("그래픽", "지난해", "한겨레", "기사", "기자", "본지", "측은", "작년", "신문", "종이", "우리", "지면", "보도", "생각", "이날", "간의", "조선일보")
 # stopwords_wild <- c("경제민주화*")
 
-dem_hani <- data_dem %>% 
-  tokens_subset(docvars(data_dem, "Newspaper") == "Hankyoreh" &  
-                docvars(data_dem, "Government") == c("2013-2014 Park GH", "1990-1993 Roh TW")) %>% 
-  tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
-  # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
-  dfm()
-
-dem_chos <- data_dem %>% 
-  tokens_subset(docvars(data_dem, "Newspaper") == "Chosun" & 
-                docvars(data_dem, "Government") == c("2013-2014 Park GH", "1990-1993 Roh TW")) %>% 
+dem_words <- data_dem %>% 
+  tokens_subset(!docvars(data_dem, "Newspaper") == "Hankook" &  
+                docvars(data_dem, "Government") == "2008-2013 Lee MB") %>% 
   tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
   dfm()
 
 Sys.setlocale(locale = "Korean")
-tstat_freq <- dem_hani %>% 
+tstat_freq <- dem_words %>% 
   dfm() %>% 
-  textstat_frequency(n = 20, groups = "Government")
-head(tstat_freq, 40)
-
-tstat_freq <- dem_chos %>% 
-  dfm() %>% 
-  textstat_frequency(n = 20, groups = "Government")
+  textstat_frequency(n = 20)
 head(tstat_freq, 40)
 
 #text scaling
-result_keyness_hani <- textstat_keyness(dem_hani, target = docvars(dem_hani, "Government") == "1990-1993 Roh TW") 
-textplot_keyness(result_keyness_hani, n = 10, color = c("grey70", "grey90")) 
-result_keyness_chos <- textstat_keyness(dem_chos, target = docvars(dem_chos, "Government") == "1990-1993 Roh TW") 
-textplot_keyness(result_keyness_chos, n = 10, color = c("black", "grey45")) 
+result_keyness <- textstat_keyness(dem_words, target = docvars(dem_words, "Newspaper") == "Chosun") 
+textplot_keyness(result_keyness, n = 10, color = c("grey20", "grey80")) 
+
 
 
 ```
@@ -377,83 +319,45 @@ Look up stray words
 ```{r}
 Sys.setlocale(locale = "C")
 x <- data_dem %>% 
-  tokens_subset(docvars(data_dem, "Newspaper") == "Chosun") %>% 
-  kwic(pattern = "간의", window = 5, valuetype = "fixed")
+  tokens_subset(docvars(data_dem, "Newspaper") == "Hankyoreh") %>% 
+  kwic(pattern = "지은이", window = 5, valuetype = "fixed")
 Sys.setlocale(locale = "Korean")
 x
 ```
 
 Plot and label
 ```{r message=FALSE, warning=FALSE}
-x <- textplot_keyness(result_keyness_hani, n = 10) +
-  # xlim(-500, 900) +
-  labs(color = "Hankyoreh",
+x <- textplot_keyness(result_keyness, n = 10) +
+  xlim(-600, 1500) +
+  labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
-  scale_color_manual(values = c("grey70", "grey90"), 
-                     labels = c("1990-1993 Roh TW", "2013-2014 Park GH")) +
-  annotate("text", x = -5, y = 20, label = "Democratic Liberal Party", hjust = 1) +
-  annotate("text", x = -5, y = 19, label = "election", hjust = 1) +
-  annotate("text", x = -5, y = 18, label = "candidate", hjust = 1) +
-  annotate("text", x = -5, y = 17, label = "socialism", hjust = 1) +
-  annotate("text", x = -5, y = 16, label = "Soviet Union", hjust = 1) +
-  annotate("text", x = -5, y = 15, label = "Minjung ('the People')", hjust = 1) +
-  annotate("text", x = -5, y = 14, label = "unification", hjust = 1) +
-  annotate("text", x = -5, y = 13, label = "Minjok ('our Nation')", hjust = 1) +
-  annotate("text", x = -5, y = 12, label = "Jaeya ('dissident leaders')", hjust = 1) +
-  annotate("text", x = -5, y = 11, label = "party president", hjust = 1) +
-  annotate("text", x = 5, y = 10, label = "Jongbuk ('Pro-North Korea')", hjust = 0) +
-  annotate("text", x = 5, y = 9, label = "war", hjust = 0)  +
-  annotate("text", x = 5, y = 8, label = "China", hjust = 0) +
-  annotate("text", x = 5, y = 7, label = "Sewol Ferry", hjust = 0) +
-  annotate("text", x = 5, y = 6, label = "Korea", hjust = 0) +
-  annotate("text", x = 5, y = 5, label = "Hong Kong", hjust = 0) +
-  annotate("text", x = 5, y = 4, label = "National Intelligence", hjust = 0) +
-  annotate("text", x = 5, y = 3, label = "Park Geun-Hye", hjust = 0)+
-  annotate("text", x = 5, y = 2, label = "Saenuri Party", hjust = 0) +
-  annotate("text", x = 5, y = 1, label = "National Intelligence Service", hjust = 0)
+  scale_color_manual(values = c("black", "grey80"), 
+                     labels = c("Chosun Ilbo", "Hankyoreh")) +
+  annotate("text", x = -30, y = 20, label = "North Korea", hjust = 1) +
+  annotate("text", x = -30, y = 19, label = "Republic of Korea", hjust = 1) +
+  annotate("text", x = -30, y = 18, label = "president", hjust = 1) +
+  annotate("text", x = -30, y = 17, label = "liberal democracy", hjust = 1) +
+  annotate("text", x = -30, y = 16, label = "leftists", hjust = 1) +
+  annotate("text", x = -30, y = 15, label = "Kim Jong-il", hjust = 1) +
+  annotate("text", x = -30, y = 14, label = "China", hjust = 1) +
+  annotate("text", x = -30, y = 13, label = "Thailand", hjust = 1) +
+  annotate("text", x = -30, y = 12, label = "MP", hjust = 1) +
+  annotate("text", x = -30, y = 11, label = "chancellor", hjust = 1) +
+  annotate("text", x = 30, y = 10, label = "PD Note (investigative journalism TV)", hjust = 0) +
+  annotate("text", x = 30, y = 9, label = "author", hjust = 0)  +
+  annotate("text", x = 30, y = 8, label = "labor", hjust = 0) +
+  annotate("text", x = 30, y = 7, label = "worker", hjust = 0) +
+  annotate("text", x = 30, y = 6, label = "participation", hjust = 0) +
+  annotate("text", x = 30, y = 5, label = "broadcast", hjust = 0) +
+  annotate("text", x = 30, y = 4, label = "welfare", hjust = 0) +
+  annotate("text", x = 30, y = 3, label = "citizen", hjust = 0)+
+  annotate("text", x = 30, y = 2, label = "media", hjust = 0) +
+  annotate("text", x = 30, y = 1, label = "society", hjust = 0)
 
-
-# library(showtext)
-# font_install(source_han_serif())
-# showtext_auto()
 x
-ggsave("plots/2_dem_hani.jpg", width=7, height=4, dpi = 300)
-# showtext_auto(FALSE)
+ggsave("plots/2_dem_keyness.jpg", width=7, height=4, dpi = 300)
 
 ```
 
-```{r message=FALSE, warning=FALSE}
-x <- textplot_keyness(result_keyness_chos, n = 10)  +
-    labs(color = "Chosun Ilbo",
-       caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
-  scale_color_manual(values = c("black", "grey45"), 
-                     labels = c("1990-1993 Roh TW", "2013-2014 Park GH")) +
-  xlim(-800, 500) +
-  annotate("text", x = -5, y = 20, label = "Soviet Union", hjust = 1) +
-  annotate("text", x = -5, y = 19, label = "Democratic Liberal Party", hjust = 1) +
-  annotate("text", x = -5, y = 18, label = "party president", hjust = 1) +
-  annotate("text", x = -5, y = 17, label = "election", hjust = 1) +
-  annotate("text", x = -5, y = 16, label = "candidate", hjust = 1) +
-  annotate("text", x = -5, y = 15, label = "common citizen", hjust = 1) +
-  annotate("text", x = -5, y = 14, label = "Gorbachev", hjust = 1) +
-  annotate("text", x = -5, y = 13, label = "Young-sam Kim", hjust = 1) +
-  annotate("text", x = -5, y = 12, label = "Local Autonomous Entity", hjust = 1) +
-  annotate("text", x = -5, y = 11, label = "economy", hjust = 1) +
-  annotate("text", x = 5, y = 10, label = "constitutional amendment", hjust = 0) +
-  annotate("text", x = 5, y = 9, label = "Suk-gi Lee", hjust = 0)  +
-  annotate("text", x = 5, y = 8, label = "MP", hjust = 0) +
-  annotate("text", x = 5, y = 7, label = "dissolution", hjust = 0) +
-  annotate("text", x = 5, y = 6, label = "school textbooks", hjust = 0) +
-  annotate("text", x = 5, y = 5, label = "Geun-hye Park", hjust = 0) +
-  annotate("text", x = 5, y = 4, label = "Republic of Korea", hjust = 0) +
-  annotate("text", x = 5, y = 3, label = "Saenuri Party", hjust = 0)+
-  annotate("text", x = 5, y = 2, label = "National Intelligence Service", hjust = 0) +
-  annotate("text", x = 5, y = 1, label = "Unified Progressive Party", hjust = 0) 
 
-# showtext_auto()
-x
-ggsave("plots/2_dem_chos.jpg", width=7, height=4, dpi = 300)
-# showtext_auto(FALSE)
-
-```
 
