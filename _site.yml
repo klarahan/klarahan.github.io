@@ -1,6 +1,6 @@
 name: "Welcome"
 navbar:
-  title: "Anonymized"
+  title: "Online Appendix"
   left:
     - text: "Home"
       href: index.html
@@ -12,6 +12,8 @@ navbar:
         - text: "Online Appendix"
         - text: "The Book"
           href: fk_intro.html
+        - text: "Chapter 1"
+          href: fk1.html
         - text: "Chapter 2"
           href: fk2.html
         - text: "Chapter 3"
@@ -20,6 +22,8 @@ navbar:
           href: fk4.html
         - text: "Chapter 5"
           href: fk5.html
+        - text: "Chapter 6"
+          href: fk6.html
 output:
   html_document:
     theme: yeti 
