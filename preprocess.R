@@ -28,6 +28,8 @@ chos_eco <- read_xls(path, sheet = "Chosun_°æÁ¦¹ÎÁÖÈ­", col_types = "text") %>%
   mutate(Newspaper = "Chosun", Keyword = "econdem") 
 
 data_chos <- rbind(chos_wel, chos_uni, chos_eco) %>% 
+  unique() %>% 
+  mutate(Body = gsub("</?[^>]+>|¡ã Á¾ÀÌ½Å¹®º¸±â", "", Body)) %>% 
   mutate(iidx = row_number(),
          Date = as.double(Date))
 
@@ -39,6 +41,7 @@ hani_eco <- read_xls(path, sheet = "Hani_°æÁ¦¹ÎÁÖÈ­", col_types = "text") %>%
   mutate(Newspaper = "Hankyoreh", Keyword = "econdem") 
 
 data_hani <- rbind(hani_wel, hani_uni, hani_eco) %>% 
+  unique() %>% 
   mutate(iidx = row_number(),
          Date = as.double(Date))
 
@@ -50,6 +53,7 @@ hank_eco <- read_xls(path, sheet = "Hangook_°æÁ¦¹ÎÁÖÈ­", col_types = "text") %>%
   mutate(Newspaper = "Hankook", Keyword = "econdem") 
 
 data_hank <- rbind(hank_wel, hank_uni, hank_eco) %>% 
+  unique() %>% 
   mutate(iidx = row_number(),
          Date = as.double(Date))
 
@@ -109,11 +113,11 @@ data <- bind_rows(data_chos, data_hani, data_hank,
                   hani_prog, hani_cons, hani_left, hani_right,
                   hank_prog, hank_cons, hank_left, hank_right) %>% 
   mutate(Date = ymd(Date)) %>%
-  mutate(Government = case_when(Date >= "1990-01-01" & Date <= "1993-02-24" ~ "1990-1993 Roh TW",
-                                Date >= "1993-02-25" & Date <= "1998-02-24" ~ "1993-1998 Kim YS",
-                                Date >= "1998-02-25" & Date <= "2003-02-24" ~ "1998-2003 Kim DJ",
-                                Date >= "2003-02-25" & Date <= "2008-02-24" ~ "2003-2008 Roh MH",
-                                Date >= "2008-02-25" & Date <= "2013-02-24" ~ "2008-2013 Lee MB",
+      mutate(Government = case_when(Date >= "1990-01-01" & Date <= "1993-02-24" ~ "1990-1993 Roh TW",
+                                    Date >= "1993-02-25" & Date <= "1998-02-24" ~ "1993-1998 Kim YS",
+                                    Date >= "1998-02-25" & Date <= "2003-02-24" ~ "1998-2003 Kim DJ",
+                                    Date >= "2003-02-25" & Date <= "2008-02-24" ~ "2003-2008 Roh MH",
+                                    Date >= "2008-02-25" & Date <= "2013-02-24" ~ "2008-2013 Lee MB",
                                 Date >= "2013-02-25" & Date <= "2014-12-31" ~ "2013-2014 Park GH")) %>%
   mutate(Prezparty = case_when(Date >= "1990-01-01" & Date <= "1993-02-24" ~ "Conservative",
                                Date >= "1993-02-25" & Date <= "1998-02-24" ~ "Conservative",
@@ -176,7 +180,7 @@ library(dplyr, warn.conflicts = FALSE)
 # Suppress summarise info
 options(dplyr.summarise.inform = FALSE)
 
-#Plan B: the below method is fast
+#Plan B: the below method is fast, still takes 3 hours on my laptop for unification or welfare
 extract_nouns2 <- function(x) {
   data_econ <- x %>%
     mutate(cleaned = gsub("[^°¡-ÆR]", " ", Body, perl = TRUE)) %>%
@@ -244,6 +248,12 @@ end_time - start_time
 
 saveRDS(y, "data/data_uni_nouns")
 
+#save samples
+readRDS("C:/Users/hanou/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/data/data_uni_nouns") %>% 
+  filter(!str_detect(Title, "ºÎÀ½|ºÎ°í|¹ßÀÎ")) %>% 
+  slice_sample(n = 55000) %>% 
+  saveRDS("data/data_uni_nouns_sample") 
+  
 #5. welfare
 
 start_time <- Sys.time()
@@ -256,10 +266,15 @@ y <- data %>%
 end_time <- Sys.time()
 end_time - start_time
 
-saveRDS(y, "data/data_wel_nouns") 
+saveRDS(y, "C:/Users/hanou/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/data/data_wel_nouns") 
+  
+#filter the obituaries in welfare articles, save samples
+readRDS("C:/Users/hanou/Dropbox/0 MYCOMP/0_Book manuscript/Lexington/data/data_wel_nouns") %>% 
+  filter(!str_detect(Title, "ºÎÀ½|ºÎ°í")) %>% 
+  slice_sample(n = 59000) %>% 
+  saveRDS("data/data_wel_nouns_sample") 
 
-
-#make dfm of everything
+#make data chunks of everything
 toks_econ <- readRDS("data/data_econ_nouns") %>% 
   corpus(text_field = "text") %>%  
   tokens()
@@ -275,15 +290,14 @@ toks_ideo <- readRDS("data/data_ideo_nouns") %>%
   tokens()
 saveRDS(toks_ideo, "data/toks_ideo")
 
-toks_uni <- readRDS("data/data_uni_nouns") %>% 
-  corpus(text_field = "text") %>%  
-  tokens() %>% 
-  tokens_sample(size = 59000)
-saveRDS(toks_uni, "data/toks_uni")
-
-toks_wel <- readRDS("data/data_wel_nouns") %>% 
+toks_uni <- readRDS("data/data_uni_nouns_sample") %>% 
   corpus(text_field = "text") %>%  
   tokens()
+saveRDS(toks_uni, "data/toks_uni")
+
+toks_wel <- readRDS("data/data_wel_nouns_sample") %>% 
+  corpus(text_field = "text") %>%  
+  tokens() 
 saveRDS(toks_wel, "data/toks_wel")
   
   

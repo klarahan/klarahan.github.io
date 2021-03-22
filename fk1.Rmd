@@ -45,7 +45,7 @@ x <- data_count %>%
   geom_vline(xintercept = 2012, linetype = 2)
 
 x
-ggsave("plots/1_trend_econdem.jpg", width=7, height=4, dpi = 300)
+# ggsave("plots/1_trend_econdem.jpg", width=7, height=4, dpi = 300)
 
 ```
 ```{r}

@@ -1,0 +1,375 @@
+---
+  title: "Chapter 6: Framing Welfare"
+  subtitle: "Online Appendix"
+---
+
+```{r setup, include=FALSE}
+setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
+Sys.setlocale(locale = "Korean")
+```
+
+Load libraries
+```{r message=FALSE, warning=FALSE}
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(tidytext)
+library(quanteda)
+library(scales)
+library(LSX)
+
+```
+
+Load the data.
+```{r}
+data_wel <- readRDS("data/data_wel_nouns_sample")
+```
+
+#Scaling
+Load the Korean sentiment lexicon.
+```{r emo, echo=FALSE}
+# sentiment lexicon source:
+# https://sites.google.com/site/datascienceslab/projects/multilingualsentiment
+pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>% 
+  rename(word = term) %>% 
+  tibble::add_column(sentiment = "positive")
+neg <- readr::read_delim("data/negative_words_ko.txt", delim='\t', col_names=c("term")) %>% 
+  rename(word = term) %>% 
+  tibble::add_column(sentiment = "negative")
+senti <- bind_rows(pos, neg) 
+senti
+```
+
+See the top sentiment words.
+```{r}
+tidy_news <- data_wel %>% 
+  unnest_tokens(word, text)
+
+tidy_news %>%
+  inner_join(senti) %>%
+  count(word, sort = TRUE) 
+
+senti_news <- tidy_news %>%
+  inner_join(senti) %>%
+  count(Newspaper, Prezparty, sentiment) %>%
+  tidyr::spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+senti_word_counts <- tidy_news %>%
+  inner_join(senti) %>%   
+  filter(Government == "1990-1993 Roh TW") %>% 
+  count(word, sentiment, Government, sort = TRUE) %>%
+  ungroup()
+
+senti_word_counts
+```
+
+Plot the top sentiment words.
+```{r message=TRUE, warning=TRUE}
+senti_word_counts %>%
+  group_by(sentiment) %>%
+  top_n(25) %>%
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(y = "Contribution to sentiment",
+       x = NULL) +
+  coord_flip() +
+  scale_fill_grey() +
+  theme_bw()
+```
+
+```{r}
+Sys.setlocale(locale = "C")
+dict_sentiment <- dictionary(list(positive = c("안정", "개선", "강화", "보장", "확보", "참여"),
+                                 negative = c("부담", "투쟁", "논란", "포퓰리즘", "반발", "논쟁")))
+dict_sentiment
+```
+
+
+```{r}
+
+# tokenize text corpus and remove various features
+corp_sent <- data_wel %>% 
+  unique() %>% 
+  mutate(Body = gsub("</?[^>]+>|▲ 종이신문보기", "", Body)) %>% 
+  corpus() %>% 
+  corpus_reshape(to =  "sentences")
+toks <- corp_sent %>% 
+    tokens()
+
+# create a document feature matrix from the tokens object
+dfmat <- toks %>% 
+    dfm(remove = "") %>% 
+    dfm_trim(min_termfreq = 5)
+```
+
+```{r}
+topfeatures(dfmat, 20)
+
+```
+
+```{r}
+seed <- as.seedwords(dict_sentiment)
+seed
+```
+
+```{r}
+# identify context words 
+context_terms <- char_context(toks, pattern = "*복지*", p = 0.05)
+
+# run LSS model
+tmod_lss <- textmodel_lss(dfmat, seeds = seed,
+                          terms = context_terms, k = 300, cache = TRUE)
+```
+Look up key periods
+```{r}
+Sys.setlocale(locale = "Korean")
+
+data_wel %>% 
+  filter(grepl("로타",text)) %>% 
+  select(Body)
+```
+
+```{r}
+head(coef(tmod_lss), 20) # most positive words
+
+```
+
+```{r}
+tail(coef(tmod_lss), 20) # most negative words
+
+```
+
+```{r}
+textplot_terms(tmod_lss, dict_sentiment[c("negative", "positive")])
+# ggsave("plots/6_wel_seeds.jpg", width=8, height= 5, dpi = 300)
+
+```
+
+```{r}
+dfmat <- dfm_group(dfmat)
+# predict sentiment scores
+pred <- as.data.frame(predict(tmod_lss, se.fit = TRUE, newdata = dfmat))
+pred$date <- docvars(dfmat, "Date")
+pred$Newspaper <- docvars(dfmat, "Newspaper")
+
+```
+
+```{r}
+plot(pred$date, pred$fit, col = rgb(0, 0, 0, 0.05), 
+     pch = 20, ylim = c(-1, 1),
+     ylab = "Threat Intensity")
+```
+
+```{r}
+pred_sm_chos <- pred %>% 
+  filter(Newspaper == "Chosun") %>% 
+  smooth_lss(engine = "locfit")
+pred_sm_hani <- pred %>% 
+  filter(Newspaper == "Hankyoreh") %>% 
+  smooth_lss(engine = "locfit")
+pred_sm_hankook <- pred %>% 
+  filter(Newspaper == "Hankook") %>% 
+  smooth_lss(engine = "locfit")
+
+Sys.setlocale(locale = "Korean")
+head(pred_sm_chos)
+head(pred_sm_hani)
+head(pred_sm_hankook)
+
+```
+
+plot trend 
+```{r}
+x <- bind_rows("Chosun" = pred_sm_chos, "Hankyoreh" = pred_sm_hani, .id = "Newspaper") %>% 
+  mutate(date = as.Date(date, format = "ymd")) %>% 
+  mutate(Newspaper = as.factor(Newspaper)) %>% 
+  ggplot(aes(date, fit, group = Newspaper, color = Newspaper, fill = Newspaper)) +
+  annotate("rect", xmin = as.Date("1998-02-25"), xmax = as.Date("2008-02-2"), 
+           ymin = -Inf, ymax = Inf, alpha = 0.2) +
+  geom_line() +
+  geom_ribbon(aes(ymin = fit + se.fit, ymax = fit - se.fit), alpha = 0.3) +
+  geom_hline(yintercept = 0) +
+  scale_color_manual(values = c("grey20", "grey70")) +
+  theme_bw() +
+  labs(x = "Year", y = "Negative vs. Positive",
+       caption = "1. 2002 South Korean local elections\n2. Seoul City's anti-free lunch referendum initiated by mayor (conservative) over free welfare controversies")  +
+  scale_x_date(breaks = "1 year", labels = date_format("%Y"), 
+           limits = as.Date(c("1990-01-01", "2014-12-31")), expand = c(0,0)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "top")  +
+  scale_fill_manual(values=c("grey20", "grey70")) +
+  annotate(geom = "text", x = as.Date("1994-01-01"), y = 0.85, 
+           label = "Conservative\ngovernments", hjust = "center") +
+  annotate(geom = "text", x = as.Date("2003-01-01"), y = 0.85, 
+           label = "Liberal\ngovernments", hjust = "center") +
+  annotate(geom = "text", x = as.Date("2012-01-01"), y = 0.85, 
+         label = "Conservative\ngovernments", hjust = "center") +
+ annotate(geom = "text", x = as.Date("2002-06-13"), y = 0.6, 
+       label = "1", hjust = "center", size = 4) +
+ annotate(geom = "text", x = as.Date("2011-08-24"), y = 0.6, 
+     label = "2", hjust = "center", size = 4) +
+  annotate("segment", x = as.Date(c("2002-06-13", "2011-08-24")),
+           xend = as.Date(c("2002-06-13", "2011-08-24")), 
+           y = - Inf, yend = 0.55, linetype = 3) 
+
+x
+# ggsave("plots/6_wel_lss.jpg", width=9, height= 5, dpi = 300)
+
+```
+Look up key periods
+```{r}
+data_wel %>% 
+  filter(Date > "2007-1-01" & Date < "2008-01-31") %>%
+  mutate(Body = gsub("</?[^>]+>|▲ 종이신문보기", "", Body)) 
+```
+read news
+```{r}
+Sys.setlocale(locale = "Korean")
+x <- data_wel %>% 
+  filter(Newspaper == "Chosun"  & Date < "2011-06-30" & Date > "2011-01-01") %>%
+  mutate(Body = gsub("</?[^>]+>|▲ 종이신문보기", "", Body)) %>% 
+  filter(grepl("무료", text)) %>% 
+  select(Date, Title, Body, Newspaper)
+x
+x[21,] %>% write.csv()
+```
+
+# Keyness
+Load the data.
+```{r}
+data_wel <- readRDS("data/toks_wel")
+```
+
+Prepare and check
+```{r}
+Sys.setlocale(locale = "C")
+
+stopwords <- c("그래픽", "지난해", "한겨레", "기사", "기자", "본지", "측은", "작년", 
+               "신문", "종이", "우리", "지면", "보도", "생각", "이날", "간의", 
+               "조선일보", "블로그", "일자", "지음", "김동섭", "안영진", "일동", 
+               "오후", "회원", "애초", "당초", "가운데", "천억", "중인", "회장", 
+               "조치", "조처", "경기도", "입장", "임직원", "여명", "부산", "인천", 
+               "학회", "대회", "이사", "이사장", "초청", "김창곤", "부천", "개최", 
+               "학회", "세미나", "학술", "총회", "총장", "김성현")
+# stopwords_wild <- c("경제민주화*")
+
+#first period
+data_words <- data_wel %>% 
+  tokens_subset(!docvars(data_wel, "Newspaper") == "Hankook" &  
+                docvars(data_wel, "Government") == "1998-2003 Kim DJ") %>% 
+  tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
+  # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
+  dfm()
+
+Sys.setlocale(locale = "Korean")
+tstat_freq <- data_words %>% 
+  dfm() %>% 
+  textstat_frequency(n = 20)
+head(tstat_freq, 40)
+
+#text scaling
+result_keyness <- textstat_keyness(data_words, target = docvars(data_words, "Newspaper") == "Chosun") 
+textplot_keyness(result_keyness, n = 10, color = c("grey20", "grey80")) 
+
+#different period
+data_words2 <- data_wel %>% 
+  tokens_subset(!docvars(data_wel, "Newspaper") == "Hankook" &  
+                docvars(data_wel, "Government") == "2008-2013 Lee MB") %>% 
+  tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
+  # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
+  dfm()
+
+Sys.setlocale(locale = "Korean")
+tstat_freq <- data_words %>% 
+  dfm() %>% 
+  textstat_frequency(n = 20)
+head(tstat_freq, 40)
+
+#text scaling
+result_keyness2 <- textstat_keyness(data_words2, target = docvars(data_words2, "Newspaper") == "Chosun") 
+textplot_keyness(result_keyness2, n = 10, color = c("grey20", "grey80")) 
+
+
+```
+Look up stray words
+```{r}
+Sys.setlocale(locale = "C")
+x <- data_wel %>% 
+  # tokens_subset(docvars(data_wel, "Newspaper") == "Hankyoreh") %>% 
+  kwic(pattern = "당초", window = 5, valuetype = "fixed")
+Sys.setlocale(locale = "Korean")
+x
+```
+
+Plot and label
+```{r message=FALSE, warning=FALSE}
+x <- textplot_keyness(result_keyness, n = 10) +
+  xlim(-1800, 1100) +
+  labs(color = "Newspaper", subtitle = "1998-2003 Kim DJ government (liberal/progressive)",
+       caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
+  scale_color_manual(values = c("black", "grey80"), 
+                     labels = c("Chosun Ilbo", "Hankyoreh")) +
+  annotate("text", x = -20, y = 20, label = "volunteer work", hjust = 1) +
+  annotate("text", x = -20, y = 19, label = "elderly", hjust = 1) +
+  annotate("text", x = -20, y = 18, label = "host", hjust = 1) +
+  annotate("text", x = -20, y = 17, label = "deliver", hjust = 1) +
+  annotate("text", x = -20, y = 16, label = "Korea", hjust = 1) +
+  annotate("text", x = -20, y = 15, label = "love", hjust = 1) +
+  annotate("text", x = -20, y = 14, label = "plot of land", hjust = 1) +
+  annotate("text", x = -20, y = 13, label = "wage earner", hjust = 1) +
+  annotate("text", x = -20, y = 12, label = "church", hjust = 1) +
+  annotate("text", x = -20, y = 11, label = "town hall", hjust = 1) +
+  annotate("text", x = 20, y = 10, label = "labor union", hjust = 0) +
+  annotate("text", x = 20, y = 9, label = "Minju ('Korean Democracy')", hjust = 0)  +
+  annotate("text", x = 20, y = 8, label = "human rights", hjust = 0) +
+  annotate("text", x = 20, y = 7, label = "reform", hjust = 0) +
+  annotate("text", x = 20, y = 6, label = "pretext", hjust = 0) +
+  annotate("text", x = 20, y = 5, label = "childcare", hjust = 0) +
+  annotate("text", x = 20, y = 4, label = "John Doe", hjust = 0) +
+  annotate("text", x = 20, y = 3, label = "unemployment", hjust = 0)+
+  annotate("text", x = 20, y = 2, label = "labor", hjust = 0) +
+  annotate("text", x = 20, y = 1, label = "worker", hjust = 0)
+
+x
+# ggsave("plots/6_wel_keyness.jpg", width=7, height=4, dpi = 300)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+x <- textplot_keyness(result_keyness2, n = 10) +
+  xlim(-1800, 1100) +
+  labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
+       caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
+  scale_color_manual(values = c("black", "grey80"), 
+                     labels = c("Chosun Ilbo", "Hankyoreh")) +
+  annotate("text", x = -30, y = 20, label = "elderly", hjust = 1) +
+  annotate("text", x = -30, y = 19, label = "volunteer work", hjust = 1) +
+  annotate("text", x = -30, y = 18, label = "center", hjust = 1) +
+  annotate("text", x = -30, y = 17, label = "donation", hjust = 1) +
+  annotate("text", x = -30, y = 16, label = "facility", hjust = 1) +
+  annotate("text", x = -30, y = 15, label = "cost-free", hjust = 1) +
+  annotate("text", x = -30, y = 14, label = "culture", hjust = 1) +
+  annotate("text", x = -30, y = 13, label = "resident", hjust = 1) +
+  annotate("text", x = -30, y = 12, label = "gardenery", hjust = 1) +
+  annotate("text", x = -30, y = 11, label = "plot of land", hjust = 1) +
+  annotate("text", x = 30, y = 10, label = "problem", hjust = 0) +
+  annotate("text", x = 30, y = 9, label = "liberalism", hjust = 0)  +
+  annotate("text", x = 30, y = 8, label = "democracy", hjust = 0) +
+  annotate("text", x = 30, y = 7, label = "policy", hjust = 0) +
+  annotate("text", x = 30, y = 6, label = "solidarity", hjust = 0) +
+  annotate("text", x = 30, y = 5, label = "progressive", hjust = 0) +
+  annotate("text", x = 30, y = 4, label = "Minju ('Korean Democracy')", hjust = 0) +
+  annotate("text", x = 30, y = 3, label = "society", hjust = 0)+
+  annotate("text", x = 30, y = 2, label = "labor", hjust = 0) +
+  annotate("text", x = 30, y = 1, label = "worker", hjust = 0)
+
+x
+# ggsave("plots/6_wel_keyness_Lee.jpg", width=7, height=4, dpi = 300)
+
+```
+
+
