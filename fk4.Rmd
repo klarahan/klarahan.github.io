@@ -5,8 +5,8 @@
 
 
 ```{r setup, include=FALSE}
-setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
-Sys.setlocale(locale = "Korean")
+setwd("~/Public/klarahan.github.io")
+#Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries
@@ -84,8 +84,8 @@ senti_word_counts %>%
 
 ```{r}
 Sys.setlocale(locale = "Korean")
-dict_sentiment <- dictionary(list(positive = c("πﬂ¿¸", "¿⁄¿Ø", "∆Ú»≠", "«˘∑¬", "º∫∞¯", "≥Î∑¬"),
-                                 negative = c("≈ı¿Ô", "∫Œ¡§", "π›¥Î", "¡ˆ¿˚", "∫Ò∆«", "¿ß±‚")))
+dict_sentiment <- dictionary(list(positive = c("Î∞úÏ†Ñ", "ÏûêÏú†", "ÌèâÌôî", "ÌòëÎ†•", "ÏÑ±Í≥µ", "ÎÖ∏Î†•"),
+                                 negative = c("Ìà¨ÏüÅ", "Î∂ÄÏ†ï", "Î∞òÎåÄ", "ÏßÄÏ†Å", "ÎπÑÌåê", "ÏúÑÍ∏∞")))
 dict_sentiment
 ```
 
@@ -95,7 +95,7 @@ dict_sentiment
 # tokenize text corpus and remove various features
 corp_sent <- data_dem %>% 
   unique() %>% 
-  mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) %>% 
+  mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body)) %>% 
   corpus() %>% 
   corpus_reshape(to =  "sentences")
 toks <- corp_sent %>% 
@@ -118,243 +118,243 @@ topfeatures(dfmat, 20)
 seed <- as.seedwords(dict_sentiment)
 seed
 ```
-# 
-# ```{r}
-# # identify context words
-# context_terms <- char_context(toks, pattern = "*πŒ¡÷¡÷¿«*", p = 0.05)
-# 
-# # run LSS model
-# tmod_lss <- textmodel_lss(dfmat, seeds = seed,
-#                           terms = context_terms, k = 300, cache = TRUE)
-# ```
-# 
-# ```{r}
-# head(coef(tmod_lss), 20) # most positive words
-# 
-# ```
-# 
-# ```{r}
-# tail(coef(tmod_lss), 20) # most negative words
-# 
-# ```
-# 
-# ```{r}
-# textplot_terms(tmod_lss, dict_sentiment[c("negative", "positive")])
-# #ggsave("plots/4_dem_seeds.jpg", width=8, height= 5, dpi = 300)
-# ```
-# 
-# ```{r}
-# dfmat <- dfm_group(dfmat)
-# # predict sentiment scores
-# pred <- as.data.frame(predict(tmod_lss, se.fit = TRUE, newdata = dfmat))
-# pred$date <- docvars(dfmat, "Date")
-# pred$Newspaper <- docvars(dfmat, "Newspaper")
-# 
-# ```
-# 
-# ```{r}
-# pred_sm_chos <- pred %>% 
-#   filter(Newspaper == "Chosun") %>% 
-#   smooth_lss(engine = "locfit")
-# pred_sm_hani <- pred %>% 
-#   filter(Newspaper == "Hankyoreh") %>% 
-#   smooth_lss(engine = "locfit")
-# pred_sm_hankook <- pred %>% 
-#   filter(Newspaper == "Hankook") %>% 
-#   smooth_lss(engine = "locfit")
-# 
-# Sys.setlocale(locale = "Korean")
-# head(pred_sm_chos)
-# head(pred_sm_hani)
-# head(pred_sm_hankook)
-# 
-# ```
-# 
-# plot trend 
-# ```{r}
-# x <- bind_rows("Chosun" = pred_sm_chos, "Hankyoreh" = pred_sm_hani, .id = "Newspaper") %>% 
-#   mutate(date = as.Date(date, format = "ymd")) %>% 
-#   mutate(Newspaper = as.factor(Newspaper)) %>% 
-#   ggplot(aes(date, fit, group = Newspaper, color = Newspaper, fill = Newspaper)) +
-#   annotate("rect", xmin = as.Date("1998-02-25"), xmax = as.Date("2008-02-2"), 
-#            ymin = -Inf, ymax = Inf, alpha = 0.2) +
-#   geom_line() +
-#   geom_ribbon(aes(ymin = fit + se.fit, ymax = fit - se.fit), alpha = 0.3) +
-#   geom_hline(yintercept = 0) +
-#   scale_color_manual(values = c("grey20", "grey70")) +
-#   theme_bw() +
-#   labs(x = "Year", y = "Negative vs. Positive",
-#        caption = "1. First Inter-Korean Summit between North and South Korea\n2. Start of national mass protests against the Korea-U.S. FTA and the conservative government\n3. Violent clashes in the National Assembly begin over the ratification of the Korea-U.S. FTA\n4. Prosecutors indict Lee Seok-ki (United Progressive Party) on grounds of pro-North Korea treason")  +
-#   scale_x_date(breaks = "1 year", labels = date_format("%Y"), 
-#            limits = as.Date(c("1990-01-01", "2014-12-31")), expand = c(0,0)) +
-#   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-#         legend.position = "top")  +
-#   scale_fill_manual(values=c("grey20", "grey70")) +
-#   annotate(geom = "text", x = as.Date("1994-01-01"), y = 0.5, 
-#            label = "Conservative\ngovernments", hjust = "center") +
-#   annotate(geom = "text", x = as.Date("2003-01-01"), y = 0.5, 
-#            label = "Liberal\ngovernments", hjust = "center") +
-#   annotate(geom = "text", x = as.Date("2012-01-01"), y = 0.5, 
-#          label = "Conservative\ngovernments", hjust = "center") +
-#   annotate(geom = "text", x = as.Date("2000-06-13"), y = 0.35, 
-#          label = "1", hjust = "center", size = 4) +
-#   annotate(geom = "text", x = as.Date("2008-06-05"), y = 0.35, 
-#          label = "2", hjust = "center", size = 4) +
-#    annotate(geom = "text", x = as.Date("2008-12-26"), y = 0.35, 
-#          label = "3", hjust = "center", size = 4) +
-#   annotate(geom = "text", x = as.Date("2013-09-23"), y = 0.35, 
-#          label = "4", hjust = "center", size = 4) +
-#   annotate("segment", x = as.Date(c("2000-06-13", "2008-06-05", "2008-12-26","2013-09-23")),
-#            xend = as.Date(c("2000-06-13", "2008-06-05", "2008-12-26", "2013-09-23")), 
-#            y = - Inf, yend = 0.3, linetype = 3) +
-#   ylim(-0.45, 0.55) 
-# 
-# x
-# #ggsave("plots/4_dem_lss.jpg", width=9, height= 5, dpi = 300)
-# 
-# ```
-# Look up key periods
-# ```{r}
-# data_dem %>% 
-#   filter(Date > "2008-12-01" & Date < "2009-01-31") %>%
-#   mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) 
-# ```
-# read news
-# ```{r}
-# Sys.setlocale(locale = "Korean")
-# x <- data_dem %>% 
-#   filter(Newspaper == "Hankyoreh"  & Date > "2014-1-01" & Date < "2014-12-31") %>%
-#   mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) %>% 
-#   filter(grepl("Ω√πŒ", text)) %>% 
-#   select(Date, Title, Body, Newspaper)
-# x
-# x[38,] %>% write.csv()
-# ```
-# 
-# # Keyness
-# Load the data.
-# ```{r}
-# data_dem <- readRDS("data/toks_dem")
-# ```
-# 
-# Prepare and check
-# ```{r}
-# Sys.setlocale(locale = "C")
-# 
-# stopwords <- c("±◊∑°«»", "¡ˆ≥≠«ÿ", "«—∞‹∑π", "±‚ªÁ", "±‚¿⁄", "∫ª¡ˆ", "√¯¿∫", "¿€≥‚", "Ω≈πÆ", "¡æ¿Ã", "øÏ∏Æ", "¡ˆ∏È", "∫∏µµ", "ª˝∞¢", "¿Ã≥Ø", "∞£¿«", "¡∂º±¿œ∫∏", "≈¬±π", "∆˙∂ıµÂ","¿«ø¯", "√—∏Æ", "¿˙¿⁄", "¡ˆ¿∫¿Ã")
-# # stopwords_wild <- c("∞Ê¡¶πŒ¡÷»≠*")
-# 
-# #Lee MB
-# data_words <- data_dem %>% 
-#   tokens_subset(!docvars(data_dem, "Newspaper") == "Hankook" &  
-#                 docvars(data_dem, "Government") == "2008-2013 Lee MB") %>% 
-#   tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
-#   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
-#   dfm()
-# 
-# Sys.setlocale(locale = "Korean")
-# tstat_freq <- data_words %>% 
-#   dfm() %>% 
-#   textstat_frequency(n = 20)
-# head(tstat_freq, 40)
-# 
-# #text scaling
-# result_keyness <- textstat_keyness(data_words, target = docvars(data_words, "Newspaper") == "Chosun") 
-# textplot_keyness(result_keyness, n = 10, color = c("grey20", "grey80")) 
-# 
-# #Park GH
-# data_words2 <- data_dem %>% 
-#   tokens_subset(!docvars(data_dem, "Newspaper") == "Hankook" &  
-#                 docvars(data_dem, "Government") == "2013-2014 Park GH") %>% 
-#   tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
-#   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
-#   dfm()
-# 
-# Sys.setlocale(locale = "Korean")
-# tstat_freq <- data_words %>% 
-#   dfm() %>% 
-#   textstat_frequency(n = 20)
-# head(tstat_freq, 40)
-# 
-# #text scaling
-# result_keyness2 <- textstat_keyness(data_words2, target = docvars(data_words2, "Newspaper") == "Chosun") 
-# textplot_keyness(result_keyness2, n = 10, color = c("grey20", "grey80")) 
-# 
-# 
-# ```
-# Look up stray words
-# ```{r}
-# Sys.setlocale(locale = "C")
-# x <- data_dem %>% 
-#   # tokens_subset(docvars(data_dem, "Newspaper") == "Hankyoreh") %>% 
-#   kwic(pattern = "∞«±π", window = 5, valuetype = "fixed")
-# Sys.setlocale(locale = "Korean")
-# x
-# ```
-# 
-# Plot and label
-# ```{r message=FALSE, warning=FALSE}
-# x <- textplot_keyness(result_keyness, n = 10) +
-#   xlim(-700, 1500) +
-#   labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
-#        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
-#   scale_color_manual(values = c("black", "grey80"), 
-#                      labels = c("Chosun Ilbo", "Hankyoreh")) +
-#   annotate("text", x = -30, y = 20, label = "North Korea", hjust = 1) +
-#   annotate("text", x = -30, y = 19, label = "Republic of Korea", hjust = 1) +
-#   annotate("text", x = -30, y = 18, label = "president", hjust = 1) +
-#   annotate("text", x = -30, y = 17, label = "liberal democracy", hjust = 1) +
-#   annotate("text", x = -30, y = 16, label = "leftists", hjust = 1) +
-#   annotate("text", x = -30, y = 15, label = "Kim Jong-il", hjust = 1) +
-#   annotate("text", x = -30, y = 14, label = "China", hjust = 1) +
-#   annotate("text", x = -30, y = 13, label = "Obama", hjust = 1) +
-#   annotate("text", x = -30, y = 12, label = "United States", hjust = 1) +
-#   annotate("text", x = -30, y = 11, label = "state founding (Korea)", hjust = 1) +
-#   annotate("text", x = 30, y = 10, label = "newspaper-owned TV news channels", hjust = 0) +
-#   annotate("text", x = 30, y = 9, label = "PD Note (investigative journalism TV)", hjust = 0)  +
-#   annotate("text", x = 30, y = 8, label = "labor", hjust = 0) +
-#   annotate("text", x = 30, y = 7, label = "worker", hjust = 0) +
-#   annotate("text", x = 30, y = 6, label = "participation", hjust = 0) +
-#   annotate("text", x = 30, y = 5, label = "broadcast", hjust = 0) +
-#   annotate("text", x = 30, y = 4, label = "welfare", hjust = 0) +
-#   annotate("text", x = 30, y = 3, label = "citizen", hjust = 0)+
-#   annotate("text", x = 30, y = 2, label = "media", hjust = 0) +
-#   annotate("text", x = 30, y = 1, label = "society", hjust = 0)
-# 
-# x
-# # ggsave("plots/4_dem_keyness.jpg", width=7, height=4, dpi = 300)
-# 
-# ```
-# 
-# ```{r message=FALSE, warning=FALSE}
-# x <- textplot_keyness(result_keyness2, n = 10) +
-#   xlim(-700, 1500) +
-#   labs(color = "Newspaper", subtitle = "2013-2014 Park GH government (conservative)",
-#        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
-#   scale_color_manual(values = c("black", "grey80"), 
-#                      labels = c("Chosun Ilbo", "Hankyoreh")) +
-#   annotate("text", x = -30, y = 20, label = "United Progressive Party", hjust = 1) +
-#   annotate("text", x = -30, y = 19, label = "North Korea", hjust = 1) +
-#   annotate("text", x = -30, y = 18, label = "unification", hjust = 1) +
-#   annotate("text", x = -30, y = 17, label = "Republic of Korea", hjust = 1) +
-#   annotate("text", x = -30, y = 16, label = "liberal democracy", hjust = 1) +
-#   annotate("text", x = -30, y = 15, label = "China", hjust = 1) +
-#   annotate("text", x = -30, y = 14, label = "national conspiracy", hjust = 1) +
-#   annotate("text", x = -30, y = 13, label = "dissolution", hjust = 1) +
-#   annotate("text", x = -30, y = 12, label = "Constitutional Court", hjust = 1) +
-#   annotate("text", x = -30, y = 11, label = "brawls (by legislators)", hjust = 1) +
-#   annotate("text", x = 30, y = 10, label = "Progressive Party", hjust = 0) +
-#   annotate("text", x = 30, y = 9, label = "worker", hjust = 0)  +
-#   annotate("text", x = 30, y = 8, label = "media", hjust = 0) +
-#   annotate("text", x = 30, y = 7, label = "catastrophe", hjust = 0) +
-#   annotate("text", x = 30, y = 6, label = "investigation", hjust = 0) +
-#   annotate("text", x = 30, y = 5, label = "National Intelligence Service", hjust = 0) +
-#   annotate("text", x = 30, y = 4, label = "student", hjust = 0) +
-#   annotate("text", x = 30, y = 3, label = "labor", hjust = 0)+
-#   annotate("text", x = 30, y = 2, label = "intervention", hjust = 0) +
-#   annotate("text", x = 30, y = 1, label = "citizen", hjust = 0)
-# 
-# x
-# #ggsave("plots/4_dem_keyness_Park.jpg", width=7, height=4, dpi = 300)
+
+```{r}
+ # identify context words
+context_terms <- char_context(toks, pattern = "*ÎØºÏ£ºÏ£ºÏùò*", p = 0.05)
+
+ # run LSS model
+ tmod_lss <- textmodel_lss(dfmat, seeds = seed,
+                           terms = context_terms, k = 300, cache = TRUE)
 ```
 
+ 
+```{r}
+ head(coef(tmod_lss), 20) # most positive words
+
+```
+
+```{r}
+ tail(coef(tmod_lss), 20) # most negative words
+
+```
+
+```{r}
+ textplot_terms(tmod_lss, dict_sentiment[c("negative", "positive")])
+ #ggsave("plots/4_dem_seeds.jpg", width=8, height= 5, dpi = 300)
+```
+
+```{r}
+ dfmat <- dfm_group(dfmat)
+ # predict sentiment scores
+ pred <- as.data.frame(predict(tmod_lss, se.fit = TRUE, newdata = dfmat))
+ pred$date <- docvars(dfmat, "Date")
+ pred$Newspaper <- docvars(dfmat, "Newspaper")
+```
+
+```{r}
+ pred_sm_chos <- pred %>%
+   filter(Newspaper == "Chosun") %>%
+   smooth_lss(engine = "locfit")
+ pred_sm_hani <- pred %>%
+   filter(Newspaper == "Hankyoreh") %>%
+ smooth_lss(engine = "locfit")
+ pred_sm_hankook <- pred %>%
+   filter(Newspaper == "Hankook") %>%
+   smooth_lss(engine = "locfit")
+
+# Sys.setlocale(locale = "Korean")
+ head(pred_sm_chos)
+ head(pred_sm_hani)
+ head(pred_sm_hankook)
+
+```
+
+plot trend
+```{r}
+ x <- bind_rows("Chosun" = pred_sm_chos, "Hankyoreh" = pred_sm_hani, .id = "Newspaper") %>%
+   mutate(date = as.Date(date, format = "ymd")) %>%
+   mutate(Newspaper = as.factor(Newspaper)) %>%
+   ggplot(aes(date, fit, group = Newspaper, color = Newspaper, fill = Newspaper)) +
+   annotate("rect", xmin = as.Date("1998-02-25"), xmax = as.Date("2008-02-2"),
+            ymin = -Inf, ymax = Inf, alpha = 0.2) +
+   geom_line() +
+   geom_ribbon(aes(ymin = fit + se.fit, ymax = fit - se.fit), alpha = 0.3) +
+   geom_hline(yintercept = 0) +
+   scale_color_manual(values = c("grey20", "grey70")) +
+   theme_bw() +
+   labs(x = "Year", y = "Negative vs. Positive",
+        caption = "1. First Inter-Korean Summit between North and South Korea\n2. Start of national mass protests against the Korea-U.S. FTA and the conservative government\n3. Violent clashes in the National Assembly begin over the ratification of the Korea-U.S. FTA\n4. Prosecutors indict Lee Seok-ki (United Progressive Party) on grounds of pro-North Korea treason")  +
+   scale_x_date(breaks = "1 year", labels = date_format("%Y"),
+            limits = as.Date(c("1990-01-01", "2014-12-31")), expand = c(0,0)) +
+   theme(axis.text.x = element_text(angle = 90, hjust = 1),
+         legend.position = "top")  +
+   scale_fill_manual(values=c("grey20", "grey70")) +
+   annotate(geom = "text", x = as.Date("1994-01-01"), y = 0.5,
+            label = "Conservative\ngovernments", hjust = "center") +
+   annotate(geom = "text", x = as.Date("2003-01-01"), y = 0.5,
+            label = "Liberal\ngovernments", hjust = "center") +
+   annotate(geom = "text", x = as.Date("2012-01-01"), y = 0.5,
+          label = "Conservative\ngovernments", hjust = "center") +
+   annotate(geom = "text", x = as.Date("2000-06-13"), y = 0.35,
+          label = "1", hjust = "center", size = 4) +
+   annotate(geom = "text", x = as.Date("2008-06-05"), y = 0.35,
+          label = "2", hjust = "center", size = 4) +
+   annotate(geom = "text", x = as.Date("2008-12-26"), y = 0.35,
+          label = "3", hjust = "center", size = 4) +
+   annotate(geom = "text", x = as.Date("2013-09-23"), y = 0.35,
+          label = "4", hjust = "center", size = 4) +
+   annotate("segment", x = as.Date(c("2000-06-13", "2008-06-05", "2008-12-26","2013-09-23")),
+            xend = as.Date(c("2000-06-13", "2008-06-05", "2008-12-26", "2013-09-23")),
+            y = - Inf, yend = 0.3, linetype = 3) +
+   ylim(-0.45, 0.55)
+
+ x
+ #ggsave("plots/4_dem_lss.jpg", width=9, height= 5, dpi = 300)
+
+```
+ Look up key periods
+```{r}
+ data_dem %>%
+   filter(Date > "2008-12-01" & Date < "2009-01-31") %>%
+   mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body))
+```
+ read news
+```{r}
+ # Sys.setlocale(locale = "Korean")
+ x <- data_dem %>%
+   filter(Newspaper == "Hankyoreh"  & Date > "2014-1-01" & Date < "2014-12-31") %>%
+   mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body)) %>%
+   filter(grepl("ÏãúÎØº", text)) %>%
+   select(Date, Title, Body, Newspaper)
+ x
+ x[38,] %>% write.csv()
+```
+
+Keyness
+Load the data.
+```{r}
+data_dem <- readRDS("data/toks_dem")
+```
+
+Prepare and check
+```{r}
+ # Sys.setlocale(locale = "C")
+
+ stopwords <- c("Í∑∏ÎûòÌîΩ", "ÏßÄÎÇúÌï¥", "ÌïúÍ≤®Î†à", "Í∏∞ÏÇ¨", "Í∏∞Ïûê", "Î≥∏ÏßÄ", "Ï∏°ÏùÄ", "ÏûëÎÖÑ", "Ïã†Î¨∏", "Ï¢ÖÏù¥", "Ïö∞Î¶¨", "ÏßÄÎ©¥", "Î≥¥ÎèÑ", "ÏÉùÍ∞Å", "Ïù¥ÎÇ†", "Í∞ÑÏùò", "Ï°∞ÏÑ†ÏùºÎ≥¥", "ÌÉúÍµ≠", "Ìè¥ÎûÄÎìú","ÏùòÏõê", "Ï¥ùÎ¶¨", "Ï†ÄÏûê", "ÏßÄÏùÄÏù¥")
+# stopwords_wild <- c("Í≤ΩÏ†úÎØºÏ£ºÌôî*")
+
+ #Lee MB
+ data_words <- data_dem %>%
+   tokens_subset(!docvars(data_dem, "Newspaper") == "Hankook" &
+                 docvars(data_dem, "Government") == "2008-2013 Lee MB") %>%
+   tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
+   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>%
+   dfm()
+
+# Sys.setlocale(locale = "Korean")
+ tstat_freq <- data_words %>%
+   dfm() %>%
+   textstat_frequency(n = 20)
+ head(tstat_freq, 40)
+
+ #text scaling
+ result_keyness <- textstat_keyness(data_words, target = docvars(data_words, "Newspaper") == "Chosun")
+ textplot_keyness(result_keyness, n = 10, color = c("grey20", "grey80"))
+
+ #Park GH
+ data_words2 <- data_dem %>%
+   tokens_subset(!docvars(data_dem, "Newspaper") == "Hankook" &
+                 docvars(data_dem, "Government") == "2013-2014 Park GH") %>%
+   tokens_remove(pattern = stopwords, valuetype = "fixed") %>%
+   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>%
+   dfm()
+
+# Sys.setlocale(locale = "Korean")
+ tstat_freq <- data_words %>%
+   dfm() %>%
+   textstat_frequency(n = 20)
+ head(tstat_freq, 40)
+
+ #text scaling
+ result_keyness2 <- textstat_keyness(data_words2, target = docvars(data_words2, "Newspaper") == "Chosun")
+ textplot_keyness(result_keyness2, n = 10, color = c("grey20", "grey80"))
+
+
+``` 
+
+Look up stray words
+```{r}
+ Sys.setlocale(locale = "C")
+ x <- data_dem %>%
+   # tokens_subset(docvars(data_dem, "Newspaper") == "Hankyoreh") %>%
+   kwic(pattern = "Í±¥Íµ≠", window = 5, valuetype = "fixed")
+ Sys.setlocale(locale = "Korean")
+ x
+```
+
+Plot and label
+```{r message=FALSE, warning=FALSE}
+ x <- textplot_keyness(result_keyness, n = 10) +
+   xlim(-700, 1500) +
+   labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
+        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
+   scale_color_manual(values = c("black", "grey80"),
+                      labels = c("Chosun Ilbo", "Hankyoreh")) +
+   annotate("text", x = -30, y = 20, label = "North Korea", hjust = 1) +
+   annotate("text", x = -30, y = 19, label = "Republic of Korea", hjust = 1) +
+   annotate("text", x = -30, y = 18, label = "president", hjust = 1) +
+   annotate("text", x = -30, y = 17, label = "liberal democracy", hjust = 1) +
+   annotate("text", x = -30, y = 16, label = "leftists", hjust = 1) +
+   annotate("text", x = -30, y = 15, label = "Kim Jong-il", hjust = 1) +
+   annotate("text", x = -30, y = 14, label = "China", hjust = 1) +
+   annotate("text", x = -30, y = 13, label = "Obama", hjust = 1) +
+   annotate("text", x = -30, y = 12, label = "United States", hjust = 1) +
+   annotate("text", x = -30, y = 11, label = "state founding (Korea)", hjust = 1) +
+   annotate("text", x = 30, y = 10, label = "newspaper-owned TV news channels", hjust = 0) +
+   annotate("text", x = 30, y = 9, label = "PD Note (investigative journalism TV)", hjust = 0)  +
+   annotate("text", x = 30, y = 8, label = "labor", hjust = 0) +
+   annotate("text", x = 30, y = 7, label = "worker", hjust = 0) +
+   annotate("text", x = 30, y = 6, label = "participation", hjust = 0) +
+   annotate("text", x = 30, y = 5, label = "broadcast", hjust = 0) +
+   annotate("text", x = 30, y = 4, label = "welfare", hjust = 0) +
+   annotate("text", x = 30, y = 3, label = "citizen", hjust = 0)+
+   annotate("text", x = 30, y = 2, label = "media", hjust = 0) +
+   annotate("text", x = 30, y = 1, label = "society", hjust = 0)
+
+ x
+ # ggsave("plots/4_dem_keyness.jpg", width=7, height=4, dpi = 300)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+ x <- textplot_keyness(result_keyness2, n = 10) +
+   xlim(-700, 1500) +
+   labs(color = "Newspaper", subtitle = "2013-2014 Park GH government (conservative)",
+        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
+   scale_color_manual(values = c("black", "grey80"),
+                      labels = c("Chosun Ilbo", "Hankyoreh")) +
+   annotate("text", x = -30, y = 20, label = "United Progressive Party", hjust = 1) +
+   annotate("text", x = -30, y = 19, label = "North Korea", hjust = 1) +
+   annotate("text", x = -30, y = 18, label = "unification", hjust = 1) +
+   annotate("text", x = -30, y = 17, label = "Republic of Korea", hjust = 1) +
+   annotate("text", x = -30, y = 16, label = "liberal democracy", hjust = 1) +
+   annotate("text", x = -30, y = 15, label = "China", hjust = 1) +
+   annotate("text", x = -30, y = 14, label = "national conspiracy", hjust = 1) +
+   annotate("text", x = -30, y = 13, label = "dissolution", hjust = 1) +
+   annotate("text", x = -30, y = 12, label = "Constitutional Court", hjust = 1) +
+   annotate("text", x = -30, y = 11, label = "brawls (by legislators)", hjust = 1) +
+   annotate("text", x = 30, y = 10, label = "Progressive Party", hjust = 0) +
+   annotate("text", x = 30, y = 9, label = "worker", hjust = 0)  +
+   annotate("text", x = 30, y = 8, label = "media", hjust = 0) +
+   annotate("text", x = 30, y = 7, label = "catastrophe", hjust = 0) +
+   annotate("text", x = 30, y = 6, label = "investigation", hjust = 0) +
+   annotate("text", x = 30, y = 5, label = "National Intelligence Service", hjust = 0) +
+   annotate("text", x = 30, y = 4, label = "student", hjust = 0) +
+   annotate("text", x = 30, y = 3, label = "labor", hjust = 0)+
+   annotate("text", x = 30, y = 2, label = "intervention", hjust = 0) +
+   annotate("text", x = 30, y = 1, label = "citizen", hjust = 0)
+
+ x
+#ggsave("plots/4_dem_keyness_Park.jpg", width=7, height=4, dpi = 300)
+```

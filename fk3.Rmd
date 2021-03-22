@@ -7,9 +7,9 @@ subtitle: "Online Appendix"
 
 ## Prep
 ```{r setup, include=FALSE}
-setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
+setwd("~/Public/klarahan.github.io")
 # localeToCharset()
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries

@@ -4,8 +4,8 @@
 ---
 
 ```{r setup, include=FALSE}
-setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
-Sys.setlocale(locale = "Korean")
+setwd("~/Public/klarahan.github.io")
+#Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries
@@ -82,9 +82,9 @@ senti_word_counts %>%
 ```
 
 ```{r}
-Sys.setlocale(locale = "C")
-dict_sentiment <- dictionary(list(positive = c("±∏ªÛ", "¿⁄¿Ø", "∆Ú»≠", "«˘∑¬", "¡ˆø¯", "π¯øµ"),
-                                 negative = c("≈ı¿Ô", "¥Î∏≥", "π´ªÍ", "ºº∑¬", "∫Ò∆«", "∫–ø≠")))
+# Sys.setlocale(locale = "C")
+dict_sentiment <- dictionary(list(positive = c("Íµ¨ÏÉÅ", "ÏûêÏú†", "ÌèâÌôî", "ÌòëÎ†•", "ÏßÄÏõê", "Î≤àÏòÅ"),
+                                 negative = c("Ìà¨ÏüÅ", "ÎåÄÎ¶Ω", "Î¨¥ÏÇ∞", "ÏÑ∏Î†•", "ÎπÑÌåê", "Î∂ÑÏó¥")))
 dict_sentiment
 ```
 
@@ -94,7 +94,7 @@ dict_sentiment
 # tokenize text corpus and remove various features
 corp_sent <- data_uni %>% 
   unique() %>% 
-  mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) %>% 
+  mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body)) %>% 
   corpus() %>% 
   corpus_reshape(to =  "sentences")
 toks <- corp_sent %>% 
@@ -118,7 +118,7 @@ seed
 
 ```{r}
 # identify context words 
-context_terms <- char_context(toks, pattern = "*≈Î¿œ*", p = 0.05)
+context_terms <- char_context(toks, pattern = "*ÌÜµÏùº*", p = 0.05)
 
 # run LSS model
 tmod_lss <- textmodel_lss(dfmat, seeds = seed,
@@ -126,10 +126,10 @@ tmod_lss <- textmodel_lss(dfmat, seeds = seed,
 ```
 Look up key periods
 ```{r}
-Sys.setlocale(locale = "Korean")
+#Sys.setlocale(locale = "Korean")
 
 data_uni %>% 
-  filter(grepl("»∏¿Â", text)) %>% 
+  filter(grepl("ÌöåÏû•", text)) %>% 
   select(Body)
 ```
 
@@ -176,7 +176,7 @@ pred_sm_hankook <- pred %>%
   filter(Newspaper == "Hankook") %>% 
   smooth_lss(engine = "locfit")
 
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 head(pred_sm_chos)
 head(pred_sm_hani)
 head(pred_sm_hankook)
@@ -233,16 +233,16 @@ Look up key periods
 ```{r}
 data_uni %>% 
   filter(Date > "2001-9-01" & Date < "2001-09-30") %>%
-  mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) 
+  mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body)) 
 ```
 
 read news
 ```{r}
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 x <- data_uni %>% 
   filter(Newspaper == "Chosun"  & Date < "2002-01-01" & Date > "2001-01-01" ) %>%
-  mutate(Body = gsub("</?[^>]+>|°„ ¡æ¿ÃΩ≈πÆ∫∏±‚", "", Body)) %>% 
-  filter(grepl("±Ë¡§¿œ", text)) %>% 
+  mutate(Body = gsub("</?[^>]+>|‚ñ≤ Ï¢ÖÏù¥Ïã†Î¨∏Î≥¥Í∏∞", "", Body)) %>% 
+  filter(grepl("ÍπÄÏ†ïÏùº", text)) %>% 
   select(Date, Title, Body, Newspaper)
 x
 x[4,] %>% write.csv()
@@ -257,11 +257,11 @@ data_uni <- readRDS("data/toks_uni")
 
 Prepare and check
 ```{r}
-Sys.setlocale(locale = "C")
+# Sys.setlocale(locale = "C")
 
-stopwords <- c("±◊∑°«»", "¡ˆ≥≠«ÿ", "«—∞‹∑π", "±‚ªÁ", "±‚¿⁄", "∫ª¡ˆ", "√¯¿∫", "¿€≥‚", "Ω≈πÆ", "¡æ¿Ã", "øÏ∏Æ", "¡ˆ∏È", "∫∏µµ", "ª˝∞¢", "¿Ã≥Ø", "∞£¿«", "¡∂º±¿œ∫∏", "∫Ì∑Œ±◊", "¿œ¿⁄", "¡ˆ¿Ω", "πﬂ¿Œ", "∫¥ø¯", "∫Œƒ£ªÛ", "∏ƒ£ªÛ", "√µæÔ", "√µ∏∏", "æ÷√ ", "¿ÃøÎ¿Œ", "¿Ã¡¶»∆", "±Ë¿Œ±∏", "ø°Ω∫", "¿œµø", "ªÛªÁ", "æ‡ºˆ", "¡∂√≥", "¡∂ƒ°", "∞˙¿Â", "∆¿¿Â", "ø¯¡¶", "∫ª∫Œ", "»∏¿Â", "¿”¡˜ø¯", "¿ÃªÁ", "¥Á√ ", "≈⁄∑π∫Ò¿¸", "¿«ø¯", "»ƒ∫∏",
-"¿‘¿Â", "√—¿Á", "¥Î≈Î∑…", "±Ë¡§", "∞¸∞Ë¿⁄", "º“Ωƒ≈Î", "ø¯¿Â", "«–»∏", "¿Â¿ŒªÛ", "±ËπŒπË", "º±ª˝", "∞Êøµ")
-# stopwords_wild <- c("∞Ê¡¶πŒ¡÷»≠*")
+stopwords <- c("Í∑∏ÎûòÌîΩ", "ÏßÄÎÇúÌï¥", "ÌïúÍ≤®Î†à", "Í∏∞ÏÇ¨", "Í∏∞Ïûê", "Î≥∏ÏßÄ", "Ï∏°ÏùÄ", "ÏûëÎÖÑ", "Ïã†Î¨∏", "Ï¢ÖÏù¥", "Ïö∞Î¶¨", "ÏßÄÎ©¥", "Î≥¥ÎèÑ", "ÏÉùÍ∞Å", "Ïù¥ÎÇ†", "Í∞ÑÏùò", "Ï°∞ÏÑ†ÏùºÎ≥¥", "Î∏îÎ°úÍ∑∏", "ÏùºÏûê", "ÏßÄÏùå", "Î∞úÏù∏", "Î≥ëÏõê", "Î∂ÄÏπúÏÉÅ", "Î™®ÏπúÏÉÅ", "Ï≤úÏñµ", "Ï≤úÎßå", "Ïï†Ï¥à", "Ïù¥Ïö©Ïù∏", "Ïù¥Ï†úÌõà", "ÍπÄÏù∏Íµ¨", "ÏóêÏä§", "ÏùºÎèô", "ÏÉÅÏÇ¨", "ÏïΩÏàò", "Ï°∞Ï≤ò", "Ï°∞Ïπò", "Í≥ºÏû•", "ÌåÄÏû•", "ÏõêÏ†ú", "Î≥∏Î∂Ä", "ÌöåÏû•", "ÏûÑÏßÅÏõê", "Ïù¥ÏÇ¨", "ÎãπÏ¥à", "ÌÖîÎ†àÎπÑÏ†Ñ", "ÏùòÏõê", "ÌõÑÎ≥¥",
+"ÏûÖÏû•", "Ï¥ùÏû¨", "ÎåÄÌÜµÎ†π", "ÍπÄÏ†ï", "Í¥ÄÍ≥ÑÏûê", "ÏÜåÏãùÌÜµ", "ÏõêÏû•", "ÌïôÌöå", "Ïû•Ïù∏ÏÉÅ", "ÍπÄÎØºÎ∞∞", "ÏÑ†ÏÉù", "Í≤ΩÏòÅ")
+# stopwords_wild <- c("Í≤ΩÏ†úÎØºÏ£ºÌôî*")
 
 #KIm DJ
 data_words <- data_uni %>% 
@@ -271,7 +271,7 @@ data_words <- data_uni %>%
   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
   dfm()
 
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 tstat_freq <- data_words %>% 
   dfm() %>% 
   textstat_frequency(n = 20)
@@ -289,7 +289,7 @@ data_words2 <- data_uni %>%
   # tokens_remove(pattern = stopwords_wild, valuetype = "glob") %>% 
   dfm()
 
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 tstat_freq <- data_words %>% 
   dfm() %>% 
   textstat_frequency(n = 20)
@@ -303,16 +303,15 @@ textplot_keyness(result_keyness2, n = 10, color = c("grey20", "grey80"))
 ```
 Look up stray words
 ```{r}
-Sys.setlocale(locale = "C")
+# Sys.setlocale(locale = "C")
 x <- data_uni %>% 
   # tokens_subset(docvars(data_uni, "Newspaper") == "Hankyoreh") %>% 
-  kwic(pattern = "¿⁄πŒ∑√", window = 5, valuetype = "fixed")
-Sys.setlocale(locale = "Korean")
+  kwic(pattern = "ÏûêÎØºÎ†®Korean")
 x
 ```
 
 Plot and label
-```{r message=FALSE, warning=FALSE}
+```{r#  message=FALSE, warning=FALSE}
 x <- textplot_keyness(result_keyness, n = 10) +
   xlim(-3500, 2500) +
   labs(color = "Newspaper", subtitle = "1998-2003 Kim DJ government (liberal/progressive)",

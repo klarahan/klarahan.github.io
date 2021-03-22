@@ -4,8 +4,8 @@ subtitle: Online Appendix
 ---
 
 ```{r setup, include=FALSE}
-setwd("C:/Users/hanou/Dropbox/RESEARCH/klarahan.github.io")
-Sys.setlocale(locale = "Korean")
+setwd("~/Public/klarahan.github.io")
+##Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries
@@ -36,29 +36,29 @@ data_cleaned <- data %>%
 data_cleaned %>% top_n(10)
 
 data_cleaned %>% 
-  filter(grepl("µÓ∑œ√Îº“|¿⁄¡¯«ÿªÍ", reason)) %>% 
+  filter(grepl("Îì±Î°ùÏ∑®ÏÜå|ÏûêÏßÑÌï¥ÏÇ∞", reason)) %>% 
   count(reason)
 
 # data_cleaned <- data_cleaned %>% 
-#   filter(!grepl("µÓ∑œ√Îº“|¿⁄¡¯«ÿªÍ", reason)) %>% 
+#   filter(!grepl("Îì±Î°ùÏ∑®ÏÜå|ÏûêÏßÑÌï¥ÏÇ∞", reason)) %>% 
 #   mutate(newname = gsub(".*\\((.*)\\).*",  "\\1", outcome)) %>% 
-#   mutate(newname = gsub(".*°Ê",  "", newname)) %>%
+#   mutate(newname = gsub(".*‚Üí",  "", newname)) %>%
 #   mutate(newname = coalesce(newname, reason)) %>%
-#   mutate(newname = gsub("∞˙ Ω≈º≥«’¥Á|¿∏∑Œ Ω≈º≥«’¥Á|ø° »Ìºˆ«’¥Á|»Ìºˆ«’¥Á|º“∏Í",  "", newname)) %>% 
+#   mutate(newname = gsub("Í≥º Ïã†ÏÑ§Ìï©Îãπ|ÏúºÎ°ú Ïã†ÏÑ§Ìï©Îãπ|Ïóê Ìù°ÏàòÌï©Îãπ|Ìù°ÏàòÌï©Îãπ|ÏÜåÎ©∏",  "", newname)) %>% 
 #   select(!c(reason, outcome)) 
 
-Sys.setlocale(locale = "Korean")
+#Sys.setlocale(locale = "Korean")
 data_cleaned %>% 
-  filter(party_name %in% "Ω≈«—±π¥Á")
+  filter(party_name %in% "Ïã†ÌïúÍµ≠Îãπ")
 
 data_cleaned <- data_cleaned %>%      # fix wrong dates
     mutate(registered = case_when(
-    party_name == "Ω≈«—±π¥Á" ~ ymd(19951206),
+    party_name == "Ïã†ÌïúÍµ≠Îãπ" ~ ymd(19951206),
     TRUE ~ ymd(registered)
   ))
 data_cleaned
 
-Sys.setlocale(locale = "C")
+#Sys.setlocale(locale = "C")
 assembly_seats <- read_xlsx("data/party history.xlsx", 
                             sheet = "ASSEMBLY_SEATS",
                             col_names = c("party_name", "perc", "count")) %>%
@@ -83,19 +83,19 @@ assembly_seats <- read_xlsx("data/party history.xlsx",
     ID < 74 & ID > 57 ~ ymd("1992.05.29"),
     ID < 87 & ID > 75 ~ ymd("1988.05.29")    
   )) %>% 
-  filter(!party_name %in% c("* ¡§¥Á∫∞ µÊ«•¿≤ π◊ ¿«ºÆºˆ¥¬ º±∞≈ ¥ÁΩ√ ±‚¡ÿ¿”.",
-                          "¡§¥Á / ¥‹√º", "π´º“º”", "«’∞Ë")) %>%
+  filter(!party_name %in% c("* Ï†ïÎãπÎ≥Ñ ÎìùÌëúÏú® Î∞è ÏùòÏÑùÏàòÎäî ÏÑ†Í±∞ ÎãπÏãú Í∏∞Ï§ÄÏûÑ.",
+                          "Ï†ïÎãπ / Îã®Ï≤¥", "Î¨¥ÏÜåÏÜç", "Ìï©Í≥Ñ")) %>%
   mutate(perc = as.numeric(perc)) %>% 
   filter(perc > 5.00) %>% 
   filter(term_start >= ymd("1985.04.11"))
 # %>% 
-#   mutate(party_name = str_replace_all(party_name, "¡¶.*¥Î ±π»∏\\(", "")) %>%
+#   mutate(party_name = str_replace_all(party_name, "Ï†ú.*ÎåÄ Íµ≠Ìöå\\(", "")) %>%
 #   mutate(party_name = str_replace_all(party_name, "\\)", "")) 
 #   mutate(start = party_name)
 # 
 # %>%
 #   tidyr::separate(party_name, c("start", "end"), sep = "~") %>% 
-Sys.setlocale(locale = "Korean")
+#Sys.setlocale(locale = "Korean")
 assembly_seats
 
 ```
@@ -116,7 +116,7 @@ joined_list <- joined_list %>%
     TRUE ~ FALSE
   ))
 
-Sys.setlocale(locale = "Korean")
+#Sys.setlocale(locale = "Korean")
 joined_list
 
 
@@ -129,42 +129,42 @@ Fill in missing data manually and filter invalid ones (names that overlap)
 joined_list <- joined_list %>%
   left_join(data_cleaned) %>%
   mutate(registered = case_when(
-    party_name == "ªı¥©∏Æ¥Á" ~ ymd(20120213),
-    party_name == "«—≥™∂Û¥Á" ~ ymd(19971121),
-    party_name == "ƒ£π⁄ø¨¥Î" ~ ymd(20080321),
-    party_name == "√¢¡∂«—±π¥Á" ~ ymd(20071107),
-    party_name == "ªı√µ≥‚πŒ¡÷¥Á" ~ ymd(20000120),
-    party_name == "±ππŒ≈Î«’21" ~ ymd(20021111),
-    party_name == "πŒ¡÷±ππŒ¥Á" ~ ymd(20000308),
-    party_name == "»Ò∏¡¿««—±πΩ≈¥Á" ~ ymd(20000215),
-    party_name == "πŒ¡÷¿⁄¿Ø¥Á" ~ ymd(19900122),
-    party_name == "πŒ¡ﬂ¥Á" ~ ymd(19901110),
-    party_name == "«—∞‹∑ππŒ¡÷¥Á" ~ ymd(19880406),
-    party_name == "Ω≈«—πŒ¡÷¥Á" ~ ymd(19850118),
-    party_name == "πŒ¡÷«—±π¥Á" ~ ymd(19810101),
-    party_name == "πŒ¡ﬂ¿«¥Á" ~ ymd(19880311),
-    party_name == "πŒ¡÷≈Î«’¥Á" ~ ymd(20111216),  
+    party_name == "ÏÉàÎàÑÎ¶¨Îãπ" ~ ymd(20120213),
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ ymd(19971121),
+    party_name == "ÏπúÎ∞ïÏó∞ÎåÄ" ~ ymd(20080321),
+    party_name == "Ï∞ΩÏ°∞ÌïúÍµ≠Îãπ" ~ ymd(20071107),
+    party_name == "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ" ~ ymd(20000120),
+    party_name == "Íµ≠ÎØºÌÜµÌï©21" ~ ymd(20021111),
+    party_name == "ÎØºÏ£ºÍµ≠ÎØºÎãπ" ~ ymd(20000308),
+    party_name == "Ìù¨ÎßùÏùòÌïúÍµ≠Ïã†Îãπ" ~ ymd(20000215),
+    party_name == "ÎØºÏ£ºÏûêÏú†Îãπ" ~ ymd(19900122),
+    party_name == "ÎØºÏ§ëÎãπ" ~ ymd(19901110),
+    party_name == "ÌïúÍ≤®Î†àÎØºÏ£ºÎãπ" ~ ymd(19880406),
+    party_name == "Ïã†ÌïúÎØºÏ£ºÎãπ" ~ ymd(19850118),
+    party_name == "ÎØºÏ£ºÌïúÍµ≠Îãπ" ~ ymd(19810101),
+    party_name == "ÎØºÏ§ëÏùòÎãπ" ~ ymd(19880311),
+    party_name == "ÎØºÏ£ºÌÜµÌï©Îãπ" ~ ymd(20111216),  
     TRUE ~ ymd(registered)
   )) %>%
   mutate(terminated = case_when(
-    party_name == "ªı¥©∏Æ¥Á" ~ ymd(20170213),
-    party_name == "«—≥™∂Û¥Á" ~ ymd(20120213),
-    party_name == "ƒ£π⁄ø¨¥Î" ~ ymd(20100222),
-    party_name == "√¢¡∂«—±π¥Á" ~ ymd(20120412),
-    party_name == "ªı√µ≥‚πŒ¡÷¥Á" ~ ymd(20070627),
-    party_name == "±ππŒ≈Î«’21" ~ ymd(20040913),
-    party_name == "πŒ¡÷±ππŒ¥Á" ~ ymd(20040418),
-    party_name == "»Ò∏¡¿««—±πΩ≈¥Á" ~ ymd(20010121),
-    party_name == "πŒ¡÷¿⁄¿Ø¥Á" ~ ymd(19951206),
-    party_name == "πŒ¡ﬂ¥Á" ~ ymd(19920301),
-    party_name == "«—∞‹∑ππŒ¡÷¥Á" ~ ymd(19910313),
-    party_name == "Ω≈«—πŒ¡÷¥Á" ~ ymd(19850118),
-    party_name == "πŒ¡÷«—±π¥Á" ~ ymd(19880426),
-    party_name == "πŒ¡ﬂ¿«¥Á" ~ ymd(19880429),
+    party_name == "ÏÉàÎàÑÎ¶¨Îãπ" ~ ymd(20170213),
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ ymd(20120213),
+    party_name == "ÏπúÎ∞ïÏó∞ÎåÄ" ~ ymd(20100222),
+    party_name == "Ï∞ΩÏ°∞ÌïúÍµ≠Îãπ" ~ ymd(20120412),
+    party_name == "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ" ~ ymd(20070627),
+    party_name == "Íµ≠ÎØºÌÜµÌï©21" ~ ymd(20040913),
+    party_name == "ÎØºÏ£ºÍµ≠ÎØºÎãπ" ~ ymd(20040418),
+    party_name == "Ìù¨ÎßùÏùòÌïúÍµ≠Ïã†Îãπ" ~ ymd(20010121),
+    party_name == "ÎØºÏ£ºÏûêÏú†Îãπ" ~ ymd(19951206),
+    party_name == "ÎØºÏ§ëÎãπ" ~ ymd(19920301),
+    party_name == "ÌïúÍ≤®Î†àÎØºÏ£ºÎãπ" ~ ymd(19910313),
+    party_name == "Ïã†ÌïúÎØºÏ£ºÎãπ" ~ ymd(19850118),
+    party_name == "ÎØºÏ£ºÌïúÍµ≠Îãπ" ~ ymd(19880426),
+    party_name == "ÎØºÏ§ëÏùòÎãπ" ~ ymd(19880429),
     TRUE ~ ymd(terminated)
   ))  %>%      # fix wrong dates
     mutate(terminated = case_when(
-    party_name == "πŒ¡÷¥Á" & registered == "2000-01-20" ~ ymd(20140336),
+    party_name == "ÎØºÏ£ºÎãπ" & registered == "2000-01-20" ~ ymd(20140336),
     TRUE ~ ymd(terminated)
   ))
 
@@ -175,9 +175,9 @@ joined_list <- joined_list %>%
 #   # filter(over_5perc == TRUE)
 #   filter(registered <= term_start)
 
-Sys.setlocale(locale = "Korean")
+#Sys.setlocale(locale = "Korean")
 joined_list %>% 
-  filter(party_name %in% "πŒ¡÷¥Á")
+  filter(party_name %in% "ÎØºÏ£ºÎãπ")
 
 ```
 
@@ -188,40 +188,40 @@ joined_list <- joined_list %>%
   group_by()  %>%
   mutate(party_name = factor(party_name)) %>%
   mutate(pos = case_when(
-    party_name == "ªı¥©∏Æ¥Á" ~ "conservative",
-    party_name == "πŒ¡÷≈Î«’¥Á" ~ "liberal",
-    party_name == "≈Î«’¡¯∫∏¥Á" ~ "progressive",
-    party_name == "«—≥™∂Û¥Á" ~ "conservative",
-    party_name == "≈Î«’πŒ¡÷¥Á" ~ "liberal",
-    party_name == "¿⁄¿Øº±¡¯¥Á" ~ "conservative",
-    party_name == "ƒ£π⁄ø¨¥Î" ~ "conservative",
-    party_name == "πŒ¡÷≥Îµø¥Á" ~ "progressive",
-    party_name == "ø≠∏∞øÏ∏Æ¥Á" ~ "liberal",
-    party_name == "«—≥™∂Û¥Á" ~ "conservative",
-    party_name == "πŒ¡÷≥Îµø¥Á" ~ "progressive",
-    party_name == "ªı√µ≥‚πŒ¡÷¥Á" ~ "liberal",
-    party_name == "¿⁄¿ØπŒ¡÷ø¨«’" ~ "conservative",
-    party_name == "«—≥™∂Û¥Á" ~ "conservative",
-    party_name == "ªı¡§ƒ°±ππŒ»∏¿«" ~ "liberal",
-    party_name == "¿⁄¿ØπŒ¡÷ø¨«’" ~ "liberal",
-    party_name == "πŒ¡÷±ππŒ¥Á" ~ "liberal",
-    party_name == "Ω≈«—±π¥Á" ~ "conservative",
-    party_name == "ªı¡§ƒ°±ππŒ»∏¿«" ~ "conservative",
-    party_name == "≈Î«’πŒ¡÷¥Á" ~ "liberal",
-    party_name == "¿⁄¿ØπŒ¡÷ø¨«’" ~ "conservative",
-    party_name == "πŒ¡÷¿⁄¿Ø¥Á" ~ "conservative",
-    party_name == "πŒ¡÷¥Á" ~ "liberal",
-    party_name == "≈Î¿œ±ππŒ¥Á" ~ "conservative",
-    party_name == "Ω≈¡§¥Á" ~ "conservative",
-    party_name == "πŒ¡ﬂ¥Á" ~ "progressive",
-    party_name == "πŒ¡÷¡§¿«¥Á" ~ "conservative",
-    party_name == "∆Ú»≠πŒ¡÷¥Á" ~ "liberal",
-    party_name == "≈Î¿œπŒ¡÷¥Á" ~ "conservative",
-    party_name == "Ω≈πŒ¡÷∞¯»≠¥Á" ~ "conservative",
-    party_name == "«—∞‹∑ππŒ¡÷¥Á" ~ "liberal",
-    party_name == "«—∞‹∑ππŒ¡÷¥Á" ~ "liberal"
+    party_name == "ÏÉàÎàÑÎ¶¨Îãπ" ~ "conservative",
+    party_name == "ÎØºÏ£ºÌÜµÌï©Îãπ" ~ "liberal",
+    party_name == "ÌÜµÌï©ÏßÑÎ≥¥Îãπ" ~ "progressive",
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ "conservative",
+    party_name == "ÌÜµÌï©ÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÏûêÏú†ÏÑ†ÏßÑÎãπ" ~ "conservative",
+    party_name == "ÏπúÎ∞ïÏó∞ÎåÄ" ~ "conservative",
+    party_name == "ÎØºÏ£ºÎÖ∏ÎèôÎãπ" ~ "progressive",
+    party_name == "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ" ~ "liberal",
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ "conservative",
+    party_name == "ÎØºÏ£ºÎÖ∏ÎèôÎãπ" ~ "progressive",
+    party_name == "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©" ~ "conservative",
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ "conservative",
+    party_name == "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò" ~ "liberal",
+    party_name == "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©" ~ "liberal",
+    party_name == "ÎØºÏ£ºÍµ≠ÎØºÎãπ" ~ "liberal",
+    party_name == "Ïã†ÌïúÍµ≠Îãπ" ~ "conservative",
+    party_name == "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò" ~ "conservative",
+    party_name == "ÌÜµÌï©ÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©" ~ "conservative",
+    party_name == "ÎØºÏ£ºÏûêÏú†Îãπ" ~ "conservative",
+    party_name == "ÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÌÜµÏùºÍµ≠ÎØºÎãπ" ~ "conservative",
+    party_name == "Ïã†Ï†ïÎãπ" ~ "conservative",
+    party_name == "ÎØºÏ§ëÎãπ" ~ "progressive",
+    party_name == "ÎØºÏ£ºÏ†ïÏùòÎãπ" ~ "conservative",
+    party_name == "ÌèâÌôîÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÌÜµÏùºÎØºÏ£ºÎãπ" ~ "conservative",
+    party_name == "Ïã†ÎØºÏ£ºÍ≥µÌôîÎãπ" ~ "conservative",
+    party_name == "ÌïúÍ≤®Î†àÎØºÏ£ºÎãπ" ~ "liberal",
+    party_name == "ÌïúÍ≤®Î†àÎØºÏ£ºÎãπ" ~ "liberal"
     )) %>% 
-  filter(!grepl("µÓ∑œ√Îº“", reason, fixed = TRUE))
+  filter(!grepl("Îì±Î°ùÏ∑®ÏÜå", reason, fixed = TRUE))
 ```
 
 Plot party history
@@ -230,27 +230,27 @@ x <- joined_list %>%
   mutate(registered = as.Date(registered, format = "ymd")) %>% 
   mutate(pos = recode(pos, progressive = "prog")) %>%
   mutate(party_name = case_when(
-    party_name == "ªı¥©∏Æ¥Á" ~ "ªı¥©∏Æ¥Á\nSaenuri Party",
-    party_name == "¿⁄¿Øº±¡¯¥Á" ~ "¿⁄¿Øº±¡¯¥Á\nLiberty Forward Party",
-    party_name == "ƒ£π⁄ø¨¥Î" ~ "ƒ£π⁄ø¨¥Î\nChinbak Yeondae",
-    party_name == "ªı√µ≥‚πŒ¡÷¥Á" ~ "ªı√µ≥‚πŒ¡÷¥Á\nNew Millennium Dem. Party",
-    party_name == "«—≥™∂Û¥Á" ~ "«—≥™∂Û¥Á\nHannara Party",
-    party_name == "ªı¡§ƒ°±ππŒ»∏¿«" ~ "ªı¡§ƒ°±ππŒ»∏¿«\nNat'l Council for New Pol.",
-    party_name == "¿⁄¿ØπŒ¡÷ø¨«’" ~ "¿⁄¿ØπŒ¡÷ø¨«’\nUnited Liberal Democrats",
-    party_name == "≈Î¿œ±ππŒ¥Á" ~ "≈Î¿œ±ππŒ¥Á\nUnification National Party",
-    party_name == "Ω≈«—±π¥Á" ~ "Ω≈«—±π¥Á\nNew Korea Party",
-    party_name == "πŒ¡÷¿⁄¿Ø¥Á" ~ "πŒ¡÷¿⁄¿Ø¥Á\nDemocratic Liberal Party",
-    party_name == "Ω≈πŒ¡÷∞¯»≠¥Á" ~ "Ω≈πŒ¡÷∞¯»≠¥Á\nNew Dem. Republ. Party",
-    party_name == "≈Î¿œπŒ¡÷¥Á" ~ "≈Î¿œπŒ¡÷¥Á\nReunification Dem. Party",
-    party_name == "πŒ¡÷¡§¿«¥Á" ~ "πŒ¡÷¡§¿«¥Á\nDemocratic Justice Party",
-    party_name == "πŒ¡÷≈Î«’¥Á" ~ "πŒ¡÷≈Î«’¥Á\nDemocratic United Party",
-    party_name == "∆Ú»≠πŒ¡÷¥Á" ~ "∆Ú»≠πŒ¡÷¥Á\nPeace Democratic Party",
-    party_name == "≈Î«’πŒ¡÷¥Á" ~ "≈Î«’πŒ¡÷¥Á\nUnited Democratic Party",
-    party_name == "ø≠∏∞øÏ∏Æ¥Á" ~ "ø≠∏∞øÏ∏Æ¥Á\nYeollin Uri Party",
-    party_name == "πŒ¡÷±ππŒ¥Á" ~ "πŒ¡÷±ππŒ¥Á\nDemocratic National Party",
-    party_name == "πŒ¡÷¥Á" ~ "πŒ¡÷¥Á\nDemocratic Party",
-    party_name == "≈Î«’¡¯∫∏¥Á" ~ "≈Î«’¡¯∫∏¥Á\nUnified Progressive Party",
-    party_name == "πŒ¡÷≥Îµø¥Á" ~ "πŒ¡÷≥Îµø¥Á\nDemocratic Labor Party",
+    party_name == "ÏÉàÎàÑÎ¶¨Îãπ" ~ "ÏÉàÎàÑÎ¶¨Îãπ\nSaenuri Party",
+    party_name == "ÏûêÏú†ÏÑ†ÏßÑÎãπ" ~ "ÏûêÏú†ÏÑ†ÏßÑÎãπ\nLiberty Forward Party",
+    party_name == "ÏπúÎ∞ïÏó∞ÎåÄ" ~ "ÏπúÎ∞ïÏó∞ÎåÄ\nChinbak Yeondae",
+    party_name == "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ" ~ "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ\nNew Millennium Dem. Party",
+    party_name == "ÌïúÎÇòÎùºÎãπ" ~ "ÌïúÎÇòÎùºÎãπ\nHannara Party",
+    party_name == "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò" ~ "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò\nNat'l Council for New Pol.",
+    party_name == "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©" ~ "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©\nUnited Liberal Democrats",
+    party_name == "ÌÜµÏùºÍµ≠ÎØºÎãπ" ~ "ÌÜµÏùºÍµ≠ÎØºÎãπ\nUnification National Party",
+    party_name == "Ïã†ÌïúÍµ≠Îãπ" ~ "Ïã†ÌïúÍµ≠Îãπ\nNew Korea Party",
+    party_name == "ÎØºÏ£ºÏûêÏú†Îãπ" ~ "ÎØºÏ£ºÏûêÏú†Îãπ\nDemocratic Liberal Party",
+    party_name == "Ïã†ÎØºÏ£ºÍ≥µÌôîÎãπ" ~ "Ïã†ÎØºÏ£ºÍ≥µÌôîÎãπ\nNew Dem. Republ. Party",
+    party_name == "ÌÜµÏùºÎØºÏ£ºÎãπ" ~ "ÌÜµÏùºÎØºÏ£ºÎãπ\nReunification Dem. Party",
+    party_name == "ÎØºÏ£ºÏ†ïÏùòÎãπ" ~ "ÎØºÏ£ºÏ†ïÏùòÎãπ\nDemocratic Justice Party",
+    party_name == "ÎØºÏ£ºÌÜµÌï©Îãπ" ~ "ÎØºÏ£ºÌÜµÌï©Îãπ\nDemocratic United Party",
+    party_name == "ÌèâÌôîÎØºÏ£ºÎãπ" ~ "ÌèâÌôîÎØºÏ£ºÎãπ\nPeace Democratic Party",
+    party_name == "ÌÜµÌï©ÎØºÏ£ºÎãπ" ~ "ÌÜµÌï©ÎØºÏ£ºÎãπ\nUnited Democratic Party",
+    party_name == "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ" ~ "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ\nYeollin Uri Party",
+    party_name == "ÎØºÏ£ºÍµ≠ÎØºÎãπ" ~ "ÎØºÏ£ºÍµ≠ÎØºÎãπ\nDemocratic National Party",
+    party_name == "ÎØºÏ£ºÎãπ" ~ "ÎØºÏ£ºÎãπ\nDemocratic Party",
+    party_name == "ÌÜµÌï©ÏßÑÎ≥¥Îãπ" ~ "ÌÜµÌï©ÏßÑÎ≥¥Îãπ\nUnified Progressive Party",
+    party_name == "ÎØºÏ£ºÎÖ∏ÎèôÎãπ" ~ "ÎØºÏ£ºÎÖ∏ÎèôÎãπ\nDemocratic Labor Party",
     TRUE ~ as.character(party_name))) %>%
   filter(!pos == is.na(pos)) %>%
   # filter(perc >= 5) %>%
@@ -280,63 +280,63 @@ x <- x %>%
              linetype = 5, color = "grey40") +
   geom_hline(yintercept = as.Date(c("1992-3-25", "1996-4-12", "2000-4-13", "2004-4-15",
                                     "2008-4-9", "2012-4-11", "2016-4-13")), linetype = 3) +
-  annotate(geom = "text", y = as.Date("1990-01-22"), x = "ƒ£π⁄ø¨¥Î\nChinbak Yeondae",
+  annotate(geom = "text", y = as.Date("1990-01-22"), x = "ÏπúÎ∞ïÏó∞ÎåÄ\nChinbak Yeondae",
          label = "grand 3-party merger", vjust = "right", size = 4, angle = 90) +
-  annotate(geom = "text", y = as.Date("1987-12-16"), x = "ƒ£π⁄ø¨¥Î\nChinbak Yeondae",
+  annotate(geom = "text", y = as.Date("1987-12-16"), x = "ÏπúÎ∞ïÏó∞ÎåÄ\nChinbak Yeondae",
          label = "presidential elections", vjust = "right", size = 4, angle = 90) +
-  annotate(geom = "text", y = as.Date("1996-4-12"), x = "ƒ£π⁄ø¨¥Î\nChinbak Yeondae",
+  annotate(geom = "text", y = as.Date("1996-4-12"), x = "ÏπúÎ∞ïÏó∞ÎåÄ\nChinbak Yeondae",
          label = "legislative elections", vjust = "right", size = 4, angle = 90) +
   annotate(geom = "curve", y = as.Date("1995-12-6"), yend = as.Date("1995-12-6"),
-           x = "πŒ¡÷¿⁄¿Ø¥Á\nDemocratic Liberal Party", 
-           xend = "Ω≈«—±π¥Á\nNew Korea Party",
+           x = "ÎØºÏ£ºÏûêÏú†Îãπ\nDemocratic Liberal Party", 
+           xend = "Ïã†ÌïúÍµ≠Îãπ\nNew Korea Party",
            curvature = -0.6, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("1997-11-21"), yend = as.Date("1997-11-21"),
-           x = "Ω≈«—±π¥Á\nNew Korea Party", 
-           xend = "«—≥™∂Û¥Á\nHannara Party",
+           x = "Ïã†ÌïúÍµ≠Îãπ\nNew Korea Party", 
+           xend = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
            curvature = -0.6, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("1995-9-5"), yend = as.Date("1995-9-5"),
-           x = "πŒ¡÷¥Á\nDemocratic Party", 
-           xend = "ªı¡§ƒ°±ππŒ»∏¿«\nNat'l Council for New Pol.",
+           x = "ÎØºÏ£ºÎãπ\nDemocratic Party", 
+           xend = "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò\nNat'l Council for New Pol.",
            curvature = -0.5, arrow = arrow(length = unit(0.2, "cm"))) +
  annotate(geom = "curve", y = as.Date("2000-1-20"), yend = as.Date("2000-1-20"),
-           x = "ªı¡§ƒ°±ππŒ»∏¿«\nNat'l Council for New Pol.",
-           xend = "ªı√µ≥‚πŒ¡÷¥Á\nNew Millennium Dem. Party",
+           x = "ÏÉàÏ†ïÏπòÍµ≠ÎØºÌöåÏùò\nNat'l Council for New Pol.",
+           xend = "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ\nNew Millennium Dem. Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")))  +
   annotate(geom = "curve", y = as.Date("2006-4-7"), yend = as.Date("2006-4-7"),
-           x = "¿⁄¿ØπŒ¡÷ø¨«’\nUnited Liberal Democrats",
-           xend = "«—≥™∂Û¥Á\nHannara Party",
+           x = "ÏûêÏú†ÎØºÏ£ºÏó∞Ìï©\nUnited Liberal Democrats",
+           xend = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")))  +
  annotate(geom = "curve", y = as.Date("2011-11-23"), yend = as.Date("2011-11-23"),
-           x = "≈Î«’πŒ¡÷¥Á\nUnited Democratic Party",
-           xend = "πŒ¡÷≈Î«’¥Á\nDemocratic United Party",
+           x = "ÌÜµÌï©ÎØºÏ£ºÎãπ\nUnited Democratic Party",
+           xend = "ÎØºÏ£ºÌÜµÌï©Îãπ\nDemocratic United Party",
            curvature = -0.3, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("2003-11-11"), yend = as.Date("2003-11-11"),
-           x = "«—≥™∂Û¥Á\nHannara Party",
-           xend = "ø≠∏∞øÏ∏Æ¥Á\nYeollin Uri Party",
+           x = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
+           xend = "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ\nYeollin Uri Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("2003-11-11"), yend = as.Date("2003-11-11"),
-           x = "ªı√µ≥‚πŒ¡÷¥Á\nNew Millennium Dem. Party",
-           xend = "ø≠∏∞øÏ∏Æ¥Á\nYeollin Uri Party",
+           x = "ÏÉàÏ≤úÎÖÑÎØºÏ£ºÎãπ\nNew Millennium Dem. Party",
+           xend = "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ\nYeollin Uri Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")))  +
   annotate(geom = "curve", y = as.Date("2007-08-20"), yend = as.Date("2007-08-20"),
-           x = "ø≠∏∞øÏ∏Æ¥Á\nYeollin Uri Party",
-           xend = "≈Î«’πŒ¡÷¥Á\nUnited Democratic Party",
+           x = "Ïó¥Î¶∞Ïö∞Î¶¨Îãπ\nYeollin Uri Party",
+           xend = "ÌÜµÌï©ÎØºÏ£ºÎãπ\nUnited Democratic Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm")))  +
   annotate(geom = "curve", y = as.Date("1997-11-24"), yend = as.Date("1997-11-24"),
-           x = "πŒ¡÷¥Á\nDemocratic Party",
-           xend = "«—≥™∂Û¥Á\nHannara Party",
+           x = "ÎØºÏ£ºÎãπ\nDemocratic Party",
+           xend = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
            curvature = -0.4, arrow = arrow(length = unit(0.2, "cm")))  +
    annotate(geom = "curve", y = as.Date("2008-02-04"), yend = as.Date("2008-02-04"),
-           x = "«—≥™∂Û¥Á\nHannara Party",
-           xend = "¿⁄¿Øº±¡¯¥Á\nLiberty Forward Party",
+           x = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
+           xend = "ÏûêÏú†ÏÑ†ÏßÑÎãπ\nLiberty Forward Party",
            curvature = -0.3, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("2012-11-16"), yend = as.Date("2012-11-16"),
-           x = "¿⁄¿Øº±¡¯¥Á\nLiberty Forward Party",
-           xend = "ªı¥©∏Æ¥Á\nSaenuri Party",
+           x = "ÏûêÏú†ÏÑ†ÏßÑÎãπ\nLiberty Forward Party",
+           xend = "ÏÉàÎàÑÎ¶¨Îãπ\nSaenuri Party",
            curvature = -0.2, arrow = arrow(length = unit(0.2, "cm"))) +
   annotate(geom = "curve", y = as.Date("2012-02-03"), yend = as.Date("2012-02-03"),
-           x = "«—≥™∂Û¥Á\nHannara Party",
-           xend = "ªı¥©∏Æ¥Á\nSaenuri Party",
+           x = "ÌïúÎÇòÎùºÎãπ\nHannara Party",
+           xend = "ÏÉàÎàÑÎ¶¨Îãπ\nSaenuri Party",
            curvature = -0.3, arrow = arrow(length = unit(0.2, "cm")))
   
 x
@@ -415,7 +415,7 @@ dem_scores %>%
 <!-- ```{r} -->
 <!-- Sys.setlocale(locale = "C") -->
 
-<!-- stopwords <- c("±◊∑°«»", "¡ˆ≥≠«ÿ", "«—∞‹∑π", "±‚ªÁ", "±‚¿⁄", "∫ª¡ˆ", "√¯¿∫", "¿€≥‚", "Ω≈πÆ", "¡æ¿Ã", "øÏ∏Æ", "¡ˆ∏È", "∫∏µµ", "ª˝∞¢", "¿Ã≥Ø", "∞£¿«", "¡∂º±¿œ∫∏", "¡¯∫∏", "∫∏ºˆ", "¡¬∆ƒ", "øÏ∆ƒ", "∫ª¿«" ) -->
+<!-- stopwords <- c("Í∑∏ÎûòÌîΩ", "ÏßÄÎÇúÌï¥", "ÌïúÍ≤®Î†à", "Í∏∞ÏÇ¨", "Í∏∞Ïûê", "Î≥∏ÏßÄ", "Ï∏°ÏùÄ", "ÏûëÎÖÑ", "Ïã†Î¨∏", "Ï¢ÖÏù¥", "Ïö∞Î¶¨", "ÏßÄÎ©¥", "Î≥¥ÎèÑ", "ÏÉùÍ∞Å", "Ïù¥ÎÇ†", "Í∞ÑÏùò", "Ï°∞ÏÑ†ÏùºÎ≥¥", "ÏßÑÎ≥¥", "Î≥¥Ïàò", "Ï¢åÌåå", "Ïö∞Ìåå", "Î≥∏Ïùò" ) -->
 
 <!-- #1. text scaling -->
 <!-- data_words_ideo <- data_ideo %>% -->
@@ -464,14 +464,8 @@ dem_scores %>%
 <!-- Sys.setlocale(locale = "C") -->
 <!-- x <- data_ideo %>% -->
 <!--   # tokens_subset(docvars(data_ideo, "Newspaper") == "Hankyoreh") %>% -->
-<!--   kwic(pattern = "¿⁄πŒ", window = 5, valuetype = "fixed") -->
-<!-- Sys.setlocale(locale = "Korean") -->
-<!-- x -->
-<!-- ``` -->
-
-<!-- Plot and label -->
-<!-- ```{r message=FALSE, warning=FALSE} -->
-<!-- x <- textplot_keyness(result_keyness_ideo, n = 10) + -->
+<!--   kwic(pattern = "ÏûêÎØº", window = 5, valuetype = "fixed") -->
+<!-- #t_keyness(result_keyness_ideo, n = 10) + -->
 <!--   # xlim(-1500, 700) + -->
 <!--   labs(color = "Keyword", -->
 <!--        caption = "x-axis: chi-squared test for significance of observed versus expected frequency -->
