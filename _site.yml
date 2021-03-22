@@ -2,12 +2,10 @@ name: "Welcome"
 navbar:
   title: "Online Appendix"
   left:
-    - text: "Home"
-      href: index.html
     - text: "About"
       href: about.html
-    - text: "Framing Korea"
-      href: korea.html
+    - text: "Polarized Politics in South Korea"
+      href: index.html
       menu:
         - text: "Online Appendix"
         - text: "The Book"

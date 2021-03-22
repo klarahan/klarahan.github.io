@@ -1,5 +1,6 @@
 ---
-  title: "My Website"
+  title: "Online Appendix"
 ---
   
-  Hello, Website!
+  In my book, I describe the advantages for sharing data and code in the area studies. 
+  This online appendix does exactly that. Please click on the respective chapters.

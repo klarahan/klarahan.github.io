@@ -1,25 +1,11 @@
 ---
-  title: "Framing Korea (Lexington, 2020)"
+  title: "Polarized Politics in South Korea (Lexington, 2021)"
 ---
   
 This book is available from Rowman & Littlefield. This is the Online Appendix.
 
-This page provides all the supplementary tables and figures that haven't made it into the book. 
+To replicate the analyses with my code, you need R. 
 
-To replicate the analyses with my code, you need R.
-Example tutorial: https://dss.princeton.edu/training/RStudio101.pdf 
-There are countless more.
+I provide the RDS files of the processed words that correspond with the data selection and preprocessing as described in the book. The preproprocessing code is in the github repository.
 
-I used the following libraries for R.
-quanteda: 
-tidytext: https://www.tidytextmining.com/index.html
-stm: https://www.structuraltopicmodel.com/
-stminsights: https://github.com/cschwem2er/stminsights 
-
-The original newspaper articles cannot be shared due to data ownership, sorry. Instead, I provide the RDS files of the processed text that cannot be read easily like a newspaper article.
-
-The pre-processing is an art in itself but libraries like quanteda and tidytext make it easier. Mostly, you need to know what to remove in your data so that it doesn't interfere with your results, yet does not delete important information. See the R script here to see my settings when using quanteda: 
-
-Lastly, if you cannot read Korean, this paper has some ideas on how to automatically translate small numbers of words in R.
-https://doi.org/10.1093/pan/mpu019 (Lucas et al, 2015)
 
