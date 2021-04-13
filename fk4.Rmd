@@ -4,7 +4,7 @@
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(cache = TRUE)
+# knitr::opts_chunk$set(cache = TRUE)
 setwd("~/Public/klarahan.github.io")
 #Sys.setlocale(locale = "Korean")
 ```
@@ -125,7 +125,7 @@ context_terms <- char_context(toks, pattern = "*민주주의*", p = 0.05)
 
  # run LSS model
  tmod_lss <- textmodel_lss(dfmat, seeds = seed,
-                           terms = context_terms, k = 300, cache = TRUE)
+                           terms = context_terms, k = 300)
 ```
 
  
