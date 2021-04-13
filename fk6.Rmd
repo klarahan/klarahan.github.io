@@ -4,6 +4,7 @@
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
 setwd("~/Public/klarahan.github.io")
 #Sys.setlocale(locale = "Korean")
 ```

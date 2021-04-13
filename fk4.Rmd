@@ -3,14 +3,14 @@
   subtitle: "Online Appendix"
 ---
 
-
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
 setwd("~/Public/klarahan.github.io")
 #Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries
-```{r message=FALSE, warning=FALSE}
+```{r}
 library(lubridate)
 library(ggplot2)
 library(dplyr)
@@ -31,24 +31,24 @@ Load the Korean sentiment lexicon.
 ```{r emo, echo=FALSE}
 # sentiment lexicon source:
 # https://sites.google.com/site/datascienceslab/projects/multilingualsentiment
-pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>% 
-  rename(word = term) %>% 
+pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>%
+  rename(word = term) %>%
   tibble::add_column(sentiment = "positive")
-neg <- readr::read_delim("data/negative_words_ko.txt", delim='\t', col_names=c("term")) %>% 
-  rename(word = term) %>% 
+neg <- readr::read_delim("data/negative_words_ko.txt", delim='\t', col_names=c("term")) %>%
+  rename(word = term) %>%
   tibble::add_column(sentiment = "negative")
-senti <- bind_rows(pos, neg) 
+senti <- bind_rows(pos, neg)
 senti
 ```
 
 See the top sentiment words.
 ```{r}
-tidy_news <- data_dem %>% 
+tidy_news <- data_dem %>%
   unnest_tokens(word, text)
 
 tidy_news %>%
   inner_join(senti) %>%
-  count(word, sort = TRUE) 
+  count(word, sort = TRUE)
 
 senti_news <- tidy_news %>%
   inner_join(senti) %>%
@@ -57,8 +57,8 @@ senti_news <- tidy_news %>%
   mutate(sentiment = positive - negative)
 
 senti_word_counts <- tidy_news %>%
-  inner_join(senti) %>%   
-  filter(Government == "1990-1993 Roh TW") %>% 
+  inner_join(senti) %>%
+  filter(Government == "1990-1993 Roh TW") %>%
   count(word, sentiment, Government, sort = TRUE) %>%
   ungroup()
 
@@ -83,7 +83,7 @@ senti_word_counts %>%
 ```
 
 ```{r}
-Sys.setlocale(locale = "Korean")
+# Sys.setlocale(locale = "Korean")
 dict_sentiment <- dictionary(list(positive = c("발전", "자유", "평화", "협력", "성공", "노력"),
                                  negative = c("투쟁", "부정", "반대", "지적", "비판", "위기")))
 dict_sentiment
@@ -294,7 +294,7 @@ Look up stray words
 ```
 
 Plot and label
-```{r message=FALSE, warning=FALSE}
+```{r}
  x <- textplot_keyness(result_keyness, n = 10) +
    xlim(-700, 1500) +
    labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
@@ -327,7 +327,7 @@ Plot and label
 
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r}
  x <- textplot_keyness(result_keyness2, n = 10) +
    xlim(-700, 1500) +
    labs(color = "Newspaper", subtitle = "2013-2014 Park GH government (conservative)",

@@ -1,15 +1,16 @@
 ---
-  title: "Chapter 5: Framing Unification"
-  subtitle: "Online Appendix"
+title: 'Chapter 5: Framing Unification'
+subtitle: Online Appendix
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE)
 setwd("~/Public/klarahan.github.io")
 #Sys.setlocale(locale = "Korean")
 ```
 
 Load libraries
-```{r message=FALSE, warning=FALSE}
+```{r}
 library(lubridate)
 library(ggplot2)
 library(dplyr)
@@ -25,7 +26,7 @@ Load the data.
 data_uni <- readRDS("data/data_uni_nouns_sample")
 ```
 
-#Scaling
+#Sentiment lexicon
 Load the Korean sentiment lexicon.
 ```{r emo, echo=FALSE}
 # sentiment lexicon source:
@@ -80,14 +81,7 @@ senti_word_counts %>%
   scale_fill_grey() +
   theme_bw()
 ```
-
-```{r}
-# Sys.setlocale(locale = "C")
-dict_sentiment <- dictionary(list(positive = c("구상", "자유", "평화", "협력", "지원", "번영"),
-                                 negative = c("투쟁", "대립", "무산", "세력", "비판", "분열")))
-dict_sentiment
-```
-
+# LSS sentiments
 
 ```{r}
 
@@ -112,6 +106,11 @@ topfeatures(dfmat, 20)
 ```
 
 ```{r}
+# Sys.setlocale(locale = "C")
+dict_sentiment <- dictionary(list(positive = c("구상", "자유", "평화", "협력", "지원", "번영"),
+                                 negative = c("투쟁", "대립", "무산", "세력", "비판", "분열")))
+dict_sentiment
+
 seed <- as.seedwords(dict_sentiment)
 seed
 ```
@@ -306,12 +305,13 @@ Look up stray words
 # Sys.setlocale(locale = "C")
 x <- data_uni %>% 
   # tokens_subset(docvars(data_uni, "Newspaper") == "Hankyoreh") %>% 
-  kwic(pattern = "자민련Korean")
+  kwic(pattern = "자민련", window = 5, valuetype = "fixed")
+# Sys.setlocale(locale = "Korean")
 x
 ```
 
 Plot and label
-```{r#  message=FALSE, warning=FALSE}
+```{r}
 x <- textplot_keyness(result_keyness, n = 10) +
   xlim(-3500, 2500) +
   labs(color = "Newspaper", subtitle = "1998-2003 Kim DJ government (liberal/progressive)",
@@ -340,13 +340,11 @@ x <- textplot_keyness(result_keyness, n = 10) +
   annotate("text", x = 20, y = 1, label = "Northern side", hjust = 0)
 
 x
-# ggsave("plots/5_uni_keyness.jpg", width=7, height=4, dpi = 300)
+#ggsave("plots/5_uni_keyness.jpg", width=7, height=4, dpi = 300)
 
 ```
 
-```{r message=FALSE, warning=FALSE}
-x <- textplot_keyness(result_keyness2, n = 10) +
-  xlim(-3500, 2500) +
+```{r500, 2500) +
   labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
   scale_color_manual(values = c("black", "grey80"), 
@@ -373,7 +371,7 @@ x <- textplot_keyness(result_keyness2, n = 10) +
   annotate("text", x = 30, y = 1, label = "Northern side", hjust = 0)
 
 x
-# ggsave("plots/5_uni_keyness_Lee.jpg", width=7, height=4, dpi = 300)
+# ggsave("plots/5_uni_keyness_Lee.jpg", width=7, height=4, dp = 300)
 
 ```
 
