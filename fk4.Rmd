@@ -26,9 +26,9 @@ Load the data.
 data_dem <- readRDS("data/data_dem_nouns")
 ```
 
-#Scaling
+#Sentiment lexicon
 Load the Korean sentiment lexicon.
-```{r emo, echo=FALSE}
+```{r, echo=FALSE}
 # sentiment lexicon source:
 # https://sites.google.com/site/datascienceslab/projects/multilingualsentiment
 pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>%
@@ -81,17 +81,9 @@ senti_word_counts %>%
   scale_fill_grey() +
   theme_bw()
 ```
+# LSS sentiments
 
 ```{r}
-# Sys.setlocale(locale = "Korean")
-dict_sentiment <- dictionary(list(positive = c("발전", "자유", "평화", "협력", "성공", "노력"),
-                                 negative = c("투쟁", "부정", "반대", "지적", "비판", "위기")))
-dict_sentiment
-```
-
-
-```{r}
-
 # tokenize text corpus and remove various features
 corp_sent <- data_dem %>% 
   unique() %>% 
@@ -109,9 +101,15 @@ dfmat <- toks %>%
 
 ```{r}
 # Sys.setlocale(locale = "Korean")
-
 topfeatures(dfmat, 20)
 
+```
+
+```{r}
+# Sys.setlocale(locale = "Korean")
+dict_sentiment <- dictionary(list(positive = c("발전", "자유", "평화", "협력", "성공", "노력"),
+                                 negative = c("투쟁", "부정", "반대", "지적", "비판", "위기")))
+dict_sentiment
 ```
 
 ```{r}
@@ -289,7 +287,7 @@ Look up stray words
  x <- data_dem %>%
    # tokens_subset(docvars(data_dem, "Newspaper") == "Hankyoreh") %>%
    kwic(pattern = "건국", window = 5, valuetype = "fixed")
- Sys.setlocale(locale = "Korean")
+ # Sys.setlocale(locale = "Korean")
  x
 ```
 

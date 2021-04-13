@@ -84,7 +84,6 @@ senti_word_counts %>%
 # LSS sentiments
 
 ```{r}
-
 # tokenize text corpus and remove various features
 corp_sent <- data_uni %>% 
   unique() %>% 
@@ -110,7 +109,9 @@ topfeatures(dfmat, 20)
 dict_sentiment <- dictionary(list(positive = c("구상", "자유", "평화", "협력", "지원", "번영"),
                                  negative = c("투쟁", "대립", "무산", "세력", "비판", "분열")))
 dict_sentiment
+```
 
+```{r}
 seed <- as.seedwords(dict_sentiment)
 seed
 ```
@@ -122,14 +123,6 @@ context_terms <- char_context(toks, pattern = "*통일*", p = 0.05)
 # run LSS model
 tmod_lss <- textmodel_lss(dfmat, seeds = seed,
                           terms = context_terms, k = 300)
-```
-Look up key periods
-```{r}
-#Sys.setlocale(locale = "Korean")
-
-data_uni %>% 
-  filter(grepl("회장", text)) %>% 
-  select(Body)
 ```
 
 ```{r}

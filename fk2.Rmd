@@ -340,7 +340,7 @@ x <- x %>%
            curvature = -0.3, arrow = arrow(length = unit(0.2, "cm")))
   
 x
-ggsave("plots/2_parties.jpg", width=7, height=9, dpi = 300)  
+#ggsave("plots/2_parties.jpg", width=7, height=9, dpi = 300)  
 ```
 2. Democracy index data 
 ```{r message=FALSE, warning=FALSE}

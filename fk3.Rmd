@@ -64,6 +64,6 @@ x <- data_count %>%
   theme_minimal()
 
 x
-ggsave("plots/3_method_newspapers.jpg", width=7, height=5, dpi = 300)
+#ggsave("plots/3_method_newspapers.jpg", width=7, height=5, dpi = 300)
 ```
 
