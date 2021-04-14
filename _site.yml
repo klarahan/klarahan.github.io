@@ -1,4 +1,5 @@
 name: "Welcome"
+output_dir: docs
 navbar:
   title: "Online Appendix"
   left:

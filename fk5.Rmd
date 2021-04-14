@@ -1,6 +1,6 @@
 ---
 title: 'Chapter 5: Framing Unification'
-subtitle: Online Appendix
+subtitle: 'Online Appendix'
 ---
 
 ```{r setup, include=FALSE}
@@ -28,7 +28,8 @@ data_uni <- readRDS("data/data_uni_nouns_sample")
 
 #Sentiment lexicon
 Load the Korean sentiment lexicon.
-```{r emo, echo=FALSE}
+```{r, echo=FALSE}
+Sys.setlocale("LC_ALL", "ko_KR.UTF8")
 # sentiment lexicon source:
 # https://sites.google.com/site/datascienceslab/projects/multilingualsentiment
 pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>% 
@@ -116,13 +117,20 @@ seed <- as.seedwords(dict_sentiment)
 seed
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # identify context words 
 context_terms <- char_context(toks, pattern = "*통일*", p = 0.05)
 
-# run LSS model
+# run LSS model (uncomment below)
 tmod_lss <- textmodel_lss(dfmat, seeds = seed,
                           terms = context_terms, k = 300)
+
+saveRDS(tmod_lss, "data/tmod_uni")
+```
+
+no need to use this chunk if you use the above. this chunk was only necessary due to rmarkdown errors for building the website.
+```{r}
+tmod_lss <- readRDS("data/tmod_uni")
 ```
 
 ```{r}
@@ -337,7 +345,10 @@ x
 
 ```
 
-```{r500, 2500) +
+```{r}
+
+ x <- textplot_keyness(result_keyness2, n = 10) +
+  xlim(-3500, 2500) +
   labs(color = "Newspaper", subtitle = "2008-2013 Lee MB government (conservative)",
        caption = "x-axis: chi-squared test for significance of observed versus expected frequency") +
   scale_color_manual(values = c("black", "grey80"), 
@@ -365,6 +376,8 @@ x
 
 x
 # ggsave("plots/5_uni_keyness_Lee.jpg", width=7, height=4, dp = 300)
-
 ```
 
+```{r}
+
+```

@@ -26,9 +26,10 @@ Load the data.
 data_wel <- readRDS("data/data_wel_nouns_sample")
 ```
 
-#Scaling
+#Sentiment lexicon
 Load the Korean sentiment lexicon.
-```{r emo, echo=FALSE}
+```{r, echo=FALSE}
+Sys.setlocale("LC_ALL", "ko_KR.UTF8")
 # sentiment lexicon source:
 # https://sites.google.com/site/datascienceslab/projects/multilingualsentiment
 pos <- readr::read_delim("data/positive_words_ko.txt", delim='\t', col_names=c("term")) %>% 
@@ -82,13 +83,14 @@ senti_word_counts %>%
   theme_bw()
 ```
 
+# LSS sentiments
+
 ```{r}
 #Sys.setlocale(locale = "C")
 dict_sentiment <- dictionary(list(positive = c("안정", "개선", "강화", "보장", "확보", "참여"),
                                  negative = c("부담", "투쟁", "논란", "포퓰리즘", "반발", "논쟁")))
 dict_sentiment
 ```
-
 
 ```{r}
 
@@ -117,21 +119,21 @@ seed <- as.seedwords(dict_sentiment)
 seed
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 # identify context words 
 context_terms <- char_context(toks, pattern = "*복지*", p = 0.05)
 
 # run LSS model
 tmod_lss <- textmodel_lss(dfmat, seeds = seed,
-                          terms = context_terms, k = 300, cache = TRUE)
-```
-Look up key periods
-```{r}
-#Sys.setlocale(locale = "Korean")
+                          terms = context_terms, k = 300)
 
-data_wel %>% 
-  filter(grepl("로타",text)) %>% 
-  select(Body)
+saveRDS(tmod_lss, "data/tmod_wel")
+
+```
+
+no need to use this chunk if you use the above. this chunk was only necessary due to rmarkdown errors for building the website.
+```{r}
+tmod_lss <- readRDS("data/tmod_wel")
 ```
 
 ```{r}
@@ -303,6 +305,8 @@ x <- data_wel %>%
   # tokens_subset(docvars(data_wel, "Newspaper") == "Hankyoreh") %>% 
   kwic(pattern = "당초", window = 5, valuetype = "fixed")
 # and label
+```
+
 ```{r message=FALSE, warning=FALSE}
 x <- textplot_keyness(result_keyness, n = 10) +
   xlim(-1800, 1100) +
@@ -369,4 +373,7 @@ x
 
 ```
 
+```{r}
+
+```
 

@@ -1,4 +1,3 @@
-
 ---
 title: "Chapter 3: Method"
 subtitle: "Online Appendix"
